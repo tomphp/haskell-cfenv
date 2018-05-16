@@ -14,23 +14,17 @@ data Application = Application
 
 current :: IO (Either String Application)
 current = do
-        port <- lookupEnv "PORT"
-        home <- lookupEnv "HOME"
-        memoryLimit <- lookupEnv "MEMORY_LIMIT"
-        vcapApplication <- lookupEnv "VCAP_APPLICATION"
+        port <- lookupEnvOrError "PORT" "PORT is not set."
+        home <- lookupEnvOrError "HOME" "HOME is not set."
+        memoryLimit <- lookupEnvOrError "MEMORY_LIMIT" "MEMORY_LIMIT is not set."
+        vcapApplication <- lookupEnvOrError "VCAP_APPLICATION" "VCAP_APPLICATION is not set."
 
-        let portEither = case port of
-                                Just p -> maybeToEither ("PORT must be an integer, got '" ++ p ++ "'.") (readMaybe p)
-                                Nothing -> Left "PORT is not set."
+        let portNumber = port >>= numberOrError (\p -> "PORT must be an integer, got '" ++ p ++ "'.")
 
-        let homeEither = maybeToEither "HOME is not set." home
-        let memoryLimitEither = maybeToEither "MEMORY_LIMIT is not set." memoryLimit
-        let vcapApplicationEither = maybeToEither "VCAP_APPLICATION is not set." vcapApplication
-
-        return $ mkApplication <$> portEither
-                               <*> homeEither
-                               <*> memoryLimitEither
-                               <*> vcapApplicationEither
+        return $ mkApplication <$> portNumber
+                               <*> home
+                               <*> memoryLimit
+                               <*> vcapApplication
 
 mkApplication :: Int -> String -> String -> a -> Application
 mkApplication port home memoryLimit _ =
@@ -38,6 +32,15 @@ mkApplication port home memoryLimit _ =
                 , home = home
                 , memoryLimit = memoryLimit
                 }
+
+lookupEnvOrError :: String -> String -> IO (Either String String)
+lookupEnvOrError envName error = do
+        value <- lookupEnv envName
+        return $ maybeToEither error value
+
+numberOrError :: (String -> String) -> String -> Either String Int
+numberOrError error value =
+    maybeToEither (error value) (readMaybe value)
 
 maybeToEither :: e -> Maybe v -> Either e v
 maybeToEither error maybe = case maybe of
