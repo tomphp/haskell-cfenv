@@ -9,13 +9,13 @@ spec :: Spec
 spec = do
   describe "CFEnv" $ do
     context "current" $ do
-      it "returns Nothing if VCAP_APPLICATION is not set" $ do
+      it "returns Nothing if VCAP_APPLICATION is not set." $ do
         setEnv "HOME" "/home/userX"
         unsetEnv "VCAP_APPLICATION"
 
         app <- CFEnv.current
 
-        app `shouldBe` Nothing
+        app `shouldBe` Left "VCAP_APPLICATION is not set."
 
       it "returns Nothing if HOME is not set" $ do
         unsetEnv "HOME"
@@ -24,7 +24,7 @@ spec = do
 
         app <- CFEnv.current
 
-        app `shouldBe` Nothing
+        app `shouldBe` Left "HOME is not set."
 
       it "returns Nothing if MEMORY_LIMIT is not set" $ do
         setEnv "HOME" "/home/userY"
@@ -33,7 +33,7 @@ spec = do
 
         app <- CFEnv.current
 
-        app `shouldBe` Nothing
+        app `shouldBe` Left "MEMORY_LIMIT is not set."
 
       it "returns Application if VCAP_APPLICATION is set" $ do
         setEnv "HOME" "/home/userZ"
@@ -42,7 +42,7 @@ spec = do
 
         app <- CFEnv.current
 
-        app `shouldBe` (Just CFEnv.Application
+        app `shouldBe` (Right CFEnv.Application
                               { home = "/home/userZ"
                               , memoryLimit = "256M"
                               })
