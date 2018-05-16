@@ -16,12 +16,12 @@ current = do
         memoryLimit <- lookupEnv "MEMORY_LIMIT"
         vcapApplication <- lookupEnv "VCAP_APPLICATION"
 
-        return $ case (vcapApplication, home, memoryLimit) of
-            (Nothing, _, _) -> Nothing
-            (_, Nothing, _) -> Nothing
-            (_, _, Nothing) -> Nothing
-            _ -> Just Application { home = maybe "" id home
-                                  , memoryLimit = maybe "" id memoryLimit
-                                  }
+        return $ mkApplication <$> vcapApplication
+                               <*> home
+                               <*> memoryLimit
 
-
+mkApplication :: a -> String -> String -> Application
+mkApplication _ home memoryLimit =
+    Application { home = home
+                , memoryLimit = memoryLimit
+                }
