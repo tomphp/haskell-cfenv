@@ -5,10 +5,18 @@ module CFEnv
 
 import System.Environment (lookupEnv)
 
-data Application = Application deriving (Eq, Show)
+data Application = Application
+     { home :: String
+     } deriving (Eq, Show)
 
 current :: IO (Maybe Application)
 current = do
-        envVar <- lookupEnv "VCAP_APPLICATION"
+        vcapApplication <- lookupEnv "VCAP_APPLICATION"
+        home <- lookupEnv "HOME"
 
-        return $ fmap (const Application) envVar
+        return $ case (vcapApplication, home) of
+            (Nothing, _) -> Nothing
+            (_, Nothing) -> Nothing
+            (_, _) -> Just Application { home = maybe "" id home }
+
+
