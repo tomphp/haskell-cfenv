@@ -7,16 +7,21 @@ import System.Environment (lookupEnv)
 
 data Application = Application
      { home :: String
+     , memoryLimit :: String
      } deriving (Eq, Show)
 
 current :: IO (Maybe Application)
 current = do
-        vcapApplication <- lookupEnv "VCAP_APPLICATION"
         home <- lookupEnv "HOME"
+        memoryLimit <- lookupEnv "MEMORY_LIMIT"
+        vcapApplication <- lookupEnv "VCAP_APPLICATION"
 
-        return $ case (vcapApplication, home) of
-            (Nothing, _) -> Nothing
-            (_, Nothing) -> Nothing
-            (_, _) -> Just Application { home = maybe "" id home }
+        return $ case (vcapApplication, home, memoryLimit) of
+            (Nothing, _, _) -> Nothing
+            (_, Nothing, _) -> Nothing
+            (_, _, Nothing) -> Nothing
+            _ -> Just Application { home = maybe "" id home
+                                  , memoryLimit = maybe "" id memoryLimit
+                                  }
 
 
