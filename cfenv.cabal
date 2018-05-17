@@ -37,6 +37,7 @@ test-suite cfenv-test
       base >=4.7 && <5
     , cfenv
     , hspec == 2.*
+    , raw-strings-qq
   other-modules:
       CfEnvSpec
   default-language: Haskell2010

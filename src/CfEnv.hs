@@ -1,6 +1,5 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecordWildCards #-}
 
 module CfEnv
   ( Application(..)
@@ -11,17 +10,24 @@ import System.Environment (lookupEnv)
 import Text.Read (readMaybe)
 
 import qualified Data.Aeson as Aeson
-import qualified Data.Text as T
 import qualified Data.ByteString.Lazy.Char8 as BL
 
 data Application = Application
-  { home :: String
+  { appId :: String
+  , cfApi :: String
+  , home :: String
+  , host :: String
   , instanceId :: String
+  , index :: Int
   , memoryLimit :: String
+  , name :: String
   , pwd :: String
   , port :: Int
+  , spaceId :: String
+  , spaceName :: String
   , tmpDir :: String
   , user :: String
+  , version :: String
   } deriving (Eq, Show)
 
 current :: IO (Either String Application)
@@ -36,7 +42,7 @@ current = do
 
   let portNumber = port >>= numberOrError (\p -> "PORT must be an integer, got '" ++ p ++ "'.")
 
-  let application = vcapApplication >>= decodeVcapApp
+  let application = mapLeft (\e -> "VCAP_APPLICATION " ++ e) (vcapApplication >>= decodeVcapApp)
 
   return $ setEnvVars <$> home
                       <*> memoryLimit
@@ -52,20 +58,46 @@ decodeVcapApp =
   Aeson.eitherDecode . BL.pack
 
 emptyApplication = Application
-  { home = ""
+  { appId = ""
+  , cfApi = ""
+  , home = ""
+  , host = ""
   , instanceId = ""
+  , index = 0
   , memoryLimit = ""
+  , name = ""
   , pwd = ""
   , port = 8080
   , tmpDir = ""
+  , spaceId = ""
+  , spaceName = ""
   , user = ""
+  , version = ""
   }
 
 instance Aeson.FromJSON Application where
   parseJSON = Aeson.withObject "Application" $ \o -> do
+    appId <- o Aeson..: "application_id"
+    cfApi <- o Aeson..: "cf_api"
+    host <- o Aeson..: "host"
     instanceId <- o Aeson..: "instance_id"
+    index <- o Aeson..: "instance_index"
+    name <- o Aeson..: "name"
+    spaceId <- o Aeson..: "space_id"
+    spaceName <- o Aeson..: "space_name"
+    version <- o Aeson..: "version"
 
-    return emptyApplication { instanceId = instanceId}
+    return emptyApplication
+      {  appId = appId
+      , cfApi = cfApi
+      , host = host
+      , instanceId = instanceId
+      , index = index
+      , name = name
+      , spaceId = spaceId
+      , spaceName = spaceName
+      , version = version
+      }
 
 setEnvVars :: String -> String -> String -> Int -> String -> String -> String -> Application -> Application
 setEnvVars home memoryLimit pwd port tmpDir user vcapApplication application =
@@ -91,3 +123,7 @@ maybeToEither error =
   \case
     Just value -> Right value
     Nothing    -> Left error
+
+mapLeft :: (e -> e1) -> Either e a -> Either e1 a
+mapLeft f (Left error)  = Left $ f error
+mapLeft _ (Right value) = Right value

@@ -1,10 +1,53 @@
+{-# LANGUAGE QuasiQuotes #-}
+
 module CfEnvSpec where
 
 import System.Environment (setEnv, unsetEnv)
 
 import Test.Hspec
+import Text.RawString.QQ
 
 import CfEnv
+
+vcapApplicationJson = [r|{
+	"instance_id": "abc_instance_id",
+	"application_id": "abc_application_id",
+	"instance_index": 100,
+	"name": "app_name",
+	"port": 1080,
+	"host": "app_host",
+	"version": "xxx_version",
+	"application_uris": ["appname.apps.foundation"],
+	"space_id": "abc_space_id",
+	"space_name": "development",
+	"cf_api": "https://api.sys.foundation",
+	"limits": {}
+}|]
+
+{-
+ "VCAP_APPLICATION": {
+  "application_id": "ef1d4861-0e4f-4b10-b662-678d183e1772",
+  "application_name": "haskell-test",
+  "application_uris": [
+   "haskell-test.cfapps.io"
+  ],
+  "application_version": "922bd52a-2203-4dc9-b596-4c4ed947ef4b",
+  "cf_api": "https://api.run.pivotal.io",
+  "limits": {
+   "disk": 1024,
+   "fds": 16384,
+   "mem": 2048
+  },
+  "name": "haskell-test",
+  "space_id": "95b9361a-4864-4aab-931d-5094b862fa0e",
+  "space_name": "development",
+  "uris": [
+   "haskell-test.cfapps.io"
+  ],
+  "users": null,
+  "version": "922bd52a-2203-4dc9-b596-4c4ed947ef4b"
+ }
+-}
 
 spec :: Spec
 spec = do
@@ -17,7 +60,7 @@ spec = do
         setEnv "PWD" "/pwd"
         setEnv "TMPDIR" "/tmpdir"
         setEnv "USER" "tom"
-        setEnv "VCAP_APPLICATION" "{\"instance_id\": \"abc_instance_id\"}"
+        setEnv "VCAP_APPLICATION" vcapApplicationJson
       )
       $ do
         it "returns error if HOME is not set" $ do
@@ -60,15 +103,28 @@ spec = do
           app <- CfEnv.current
           app `shouldBe` Left "VCAP_APPLICATION is not set."
 
+        it "returns error if VCAP_APPLICATION bad JSON" $ do
+          setEnv "VCAP_APPLICATION" "not-json"
+          app <- CfEnv.current
+          app `shouldBe` Left "VCAP_APPLICATION Error in $: string"
+
         it "returns Application when the environment is correct" $ do
           app <- CfEnv.current
 
-          app `shouldBe` (Right CfEnv.Application
-                                { home = "/home/userZ"
+          app `shouldBe` Right CfEnv.Application
+                                { appId = "abc_application_id"
+                                , cfApi = "https://api.sys.foundation"
+                                , home = "/home/userZ"
+                                , host = "app_host"
                                 , instanceId = "abc_instance_id"
+                                , index = 100
                                 , memoryLimit = "256M"
+                                , name = "app_name"
                                 , pwd = "/pwd"
                                 , port = 9000
                                 , tmpDir = "/tmpdir"
+                                , spaceId = "abc_space_id"
+                                , spaceName = "development"
                                 , user = "tom"
-                                })
+                                , version = "xxx_version"
+                                }
