@@ -1,6 +1,6 @@
 {-# LANGUAGE LambdaCase #-}
 
-module CFEnv
+module CfEnv
   ( Application(..)
   , current
   ) where
