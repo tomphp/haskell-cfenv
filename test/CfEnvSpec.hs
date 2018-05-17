@@ -17,7 +17,7 @@ spec = do
         setEnv "PWD" "/pwd"
         setEnv "TMPDIR" "/tmpdir"
         setEnv "USER" "tom"
-        setEnv "VCAP_APPLICATION" "{}"
+        setEnv "VCAP_APPLICATION" "{\"instance_id\": \"abc_instance_id\"}"
       )
       $ do
         it "returns error if HOME is not set" $ do
@@ -64,10 +64,11 @@ spec = do
           app <- CfEnv.current
 
           app `shouldBe` (Right CfEnv.Application
-                                { port = 9000
-                                , home = "/home/userZ"
+                                { home = "/home/userZ"
+                                , instanceId = "abc_instance_id"
                                 , memoryLimit = "256M"
                                 , pwd = "/pwd"
+                                , port = 9000
                                 , tmpDir = "/tmpdir"
                                 , user = "tom"
                                 })

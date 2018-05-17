@@ -1,4 +1,6 @@
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards #-}
 
 module CfEnv
   ( Application(..)
@@ -8,8 +10,13 @@ module CfEnv
 import System.Environment (lookupEnv)
 import Text.Read (readMaybe)
 
+import qualified Data.Aeson as Aeson
+import qualified Data.Text as T
+import qualified Data.ByteString.Lazy.Char8 as BL
+
 data Application = Application
   { home :: String
+  , instanceId :: String
   , memoryLimit :: String
   , pwd :: String
   , port :: Int
@@ -29,17 +36,40 @@ current = do
 
   let portNumber = port >>= numberOrError (\p -> "PORT must be an integer, got '" ++ p ++ "'.")
 
-  return $ mkApplication <$> home
-                         <*> memoryLimit
-                         <*> pwd
-                         <*> portNumber
-                         <*> tmpDir
-                         <*> user
-                         <*> vcapApplication
+  let application = vcapApplication >>= decodeVcapApp
 
-mkApplication :: String -> String -> String -> Int -> String -> String -> a -> Application
-mkApplication home memoryLimit pwd port tmpDir user _ =
-  Application { home = home
+  return $ setEnvVars <$> home
+                      <*> memoryLimit
+                      <*> pwd
+                      <*> portNumber
+                      <*> tmpDir
+                      <*> user
+                      <*> vcapApplication
+                      <*> application
+
+decodeVcapApp :: String -> Either String Application
+decodeVcapApp =
+  Aeson.eitherDecode . BL.pack
+
+emptyApplication = Application
+  { home = ""
+  , instanceId = ""
+  , memoryLimit = ""
+  , pwd = ""
+  , port = 8080
+  , tmpDir = ""
+  , user = ""
+  }
+
+instance Aeson.FromJSON Application where
+  parseJSON = Aeson.withObject "Application" $ \o -> do
+    instanceId <- o Aeson..: "instance_id"
+
+    return emptyApplication { instanceId = instanceId}
+
+setEnvVars :: String -> String -> String -> Int -> String -> String -> String -> Application -> Application
+setEnvVars home memoryLimit pwd port tmpDir user vcapApplication application =
+  application { home = home
               , memoryLimit = memoryLimit
               , pwd = pwd
               , port = port
