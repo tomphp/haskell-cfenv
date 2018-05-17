@@ -9,40 +9,40 @@ import System.Environment (lookupEnv)
 import Text.Read (readMaybe)
 
 data Application = Application
-  { port :: Int
-  , home :: String
+  { home :: String
   , memoryLimit :: String
   , pwd :: String
+  , port :: Int
   , tmpDir :: String
   , user :: String
   } deriving (Eq, Show)
 
 current :: IO (Either String Application)
 current = do
-  port <- lookupEnvOrError "PORT"
   home <- lookupEnvOrError "HOME"
   memoryLimit <- lookupEnvOrError "MEMORY_LIMIT"
   pwd <- lookupEnvOrError "PWD"
+  port <- lookupEnvOrError "PORT"
   tmpDir <- lookupEnvOrError "TMPDIR"
   user <- lookupEnvOrError "USER"
   vcapApplication <- lookupEnvOrError "VCAP_APPLICATION"
 
   let portNumber = port >>= numberOrError (\p -> "PORT must be an integer, got '" ++ p ++ "'.")
 
-  return $ mkApplication <$> portNumber
-                         <*> home
+  return $ mkApplication <$> home
                          <*> memoryLimit
                          <*> pwd
+                         <*> portNumber
                          <*> tmpDir
                          <*> user
                          <*> vcapApplication
 
-mkApplication :: Int -> String -> String -> String -> String -> String -> a -> Application
-mkApplication port home memoryLimit pwd tmpDir user _ =
-  Application { port = port
-              , home = home
+mkApplication :: String -> String -> String -> Int -> String -> String -> a -> Application
+mkApplication home memoryLimit pwd port tmpDir user _ =
+  Application { home = home
               , memoryLimit = memoryLimit
               , pwd = pwd
+              , port = port
               , tmpDir = tmpDir
               , user = user
               }

@@ -19,16 +19,6 @@ spec = do
         setEnv "VCAP_APPLICATION" "{}"
       )
       $ do
-        it "returns error if PORT is not set" $ do
-          unsetEnv "PORT"
-          app <- CFEnv.current
-          app `shouldBe` Left "PORT is not set."
-
-        it "returns error if PORT is not valid number" $ do
-          setEnv "PORT" "abc"
-          app <- CFEnv.current
-          app `shouldBe` Left "PORT must be an integer, got 'abc'."
-
         it "returns error if HOME is not set" $ do
           unsetEnv "HOME"
           app <- CFEnv.current
@@ -43,6 +33,16 @@ spec = do
           unsetEnv "PWD"
           app <- CFEnv.current
           app `shouldBe` Left "PWD is not set."
+
+        it "returns error if PORT is not set" $ do
+          unsetEnv "PORT"
+          app <- CFEnv.current
+          app `shouldBe` Left "PORT is not set."
+
+        it "returns error if PORT is not valid number" $ do
+          setEnv "PORT" "abc"
+          app <- CFEnv.current
+          app `shouldBe` Left "PORT must be an integer, got 'abc'."
 
         it "returns error if TMPDIR is not set" $ do
           unsetEnv "TMPDIR"
