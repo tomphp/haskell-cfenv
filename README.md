@@ -1,5 +1,7 @@
 # Haskell CFEnv
 
+[![Build Status](https://travis-ci.org/tomphp/haskell-cfenv.svg?branch=master)](https://travis-ci.org/tomphp/haskell-cfenv)
+
 A port of [go-cfenv](https://github.com/cloudfoundry-community/go-cfenv) for
 Haskell.
 
