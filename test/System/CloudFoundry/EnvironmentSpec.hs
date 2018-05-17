@@ -1,13 +1,13 @@
 {-# LANGUAGE QuasiQuotes #-}
 
-module CfEnvSpec where
+module System.CloudFoundry.EnvironmentSpec where
 
 import System.Environment (setEnv, unsetEnv)
 
 import Test.Hspec
 import Text.RawString.QQ
 
-import CfEnv
+import qualified System.CloudFoundry.Environment as CfEnv
 
 vcapApplicationJson = [r|{
 	"instance_id": "abc_instance_id",
@@ -112,19 +112,19 @@ spec = do
           app <- CfEnv.current
 
           app `shouldBe` Right CfEnv.Application
-                                { appId = "abc_application_id"
-                                , cfApi = "https://api.sys.foundation"
-                                , home = "/home/userZ"
-                                , host = "app_host"
-                                , instanceId = "abc_instance_id"
-                                , index = 100
-                                , memoryLimit = "256M"
-                                , name = "app_name"
-                                , pwd = "/pwd"
-                                , port = 9000
-                                , tmpDir = "/tmpdir"
-                                , spaceId = "abc_space_id"
-                                , spaceName = "development"
-                                , user = "tom"
-                                , version = "xxx_version"
+                                { CfEnv.appId = "abc_application_id"
+                                , CfEnv.cfApi = "https://api.sys.foundation"
+                                , CfEnv.home = "/home/userZ"
+                                , CfEnv.host = "app_host"
+                                , CfEnv.instanceId = "abc_instance_id"
+                                , CfEnv.index = 100
+                                , CfEnv.memoryLimit = "256M"
+                                , CfEnv.name = "app_name"
+                                , CfEnv.pwd = "/pwd"
+                                , CfEnv.port = 9000
+                                , CfEnv.tmpDir = "/tmpdir"
+                                , CfEnv.spaceId = "abc_space_id"
+                                , CfEnv.spaceName = "development"
+                                , CfEnv.user = "tom"
+                                , CfEnv.version = "xxx_version"
                                 }

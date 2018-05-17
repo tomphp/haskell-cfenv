@@ -1,7 +1,7 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module CfEnv
+module System.CloudFoundry.Environment
   ( Application(..)
   , current
   ) where
