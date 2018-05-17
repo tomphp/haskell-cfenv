@@ -10,9 +10,12 @@ spec = do
   describe "CFEnv" $ do
     describe "current" $ before
       (do
-        setEnv "PORT" "9000"
         setEnv "HOME" "/home/userZ"
         setEnv "MEMORY_LIMIT" "256M"
+        setEnv "PORT" "9000"
+        setEnv "PWD" "/pwd"
+        setEnv "TMPDIR" "/tmpdir"
+        setEnv "USER" "tom"
         setEnv "VCAP_APPLICATION" "{}"
       )
       $ do
@@ -36,6 +39,21 @@ spec = do
           app <- CFEnv.current
           app `shouldBe` Left "MEMORY_LIMIT is not set."
 
+        it "returns error if PWD is not set" $ do
+          unsetEnv "PWD"
+          app <- CFEnv.current
+          app `shouldBe` Left "PWD is not set."
+
+        it "returns error if TMPDIR is not set" $ do
+          unsetEnv "TMPDIR"
+          app <- CFEnv.current
+          app `shouldBe` Left "TMPDIR is not set."
+
+        it "returns error if USER is not set" $ do
+          unsetEnv "USER"
+          app <- CFEnv.current
+          app `shouldBe` Left "USER is not set."
+
         it "returns error if VCAP_APPLICATION is not set" $ do
           unsetEnv "VCAP_APPLICATION"
           app <- CFEnv.current
@@ -48,4 +66,7 @@ spec = do
                                 { port = 9000
                                 , home = "/home/userZ"
                                 , memoryLimit = "256M"
+                                , pwd = "/pwd"
+                                , tmpDir = "/tmpdir"
+                                , user = "tom"
                                 })

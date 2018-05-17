@@ -12,33 +12,45 @@ data Application = Application
   { port :: Int
   , home :: String
   , memoryLimit :: String
+  , pwd :: String
+  , tmpDir :: String
+  , user :: String
   } deriving (Eq, Show)
 
 current :: IO (Either String Application)
 current = do
-  port <- lookupEnvOrError "PORT" "PORT is not set."
-  home <- lookupEnvOrError "HOME" "HOME is not set."
-  memoryLimit <- lookupEnvOrError "MEMORY_LIMIT" "MEMORY_LIMIT is not set."
-  vcapApplication <- lookupEnvOrError "VCAP_APPLICATION" "VCAP_APPLICATION is not set."
+  port <- lookupEnvOrError "PORT"
+  home <- lookupEnvOrError "HOME"
+  memoryLimit <- lookupEnvOrError "MEMORY_LIMIT"
+  pwd <- lookupEnvOrError "PWD"
+  tmpDir <- lookupEnvOrError "TMPDIR"
+  user <- lookupEnvOrError "USER"
+  vcapApplication <- lookupEnvOrError "VCAP_APPLICATION"
 
   let portNumber = port >>= numberOrError (\p -> "PORT must be an integer, got '" ++ p ++ "'.")
 
   return $ mkApplication <$> portNumber
                          <*> home
                          <*> memoryLimit
+                         <*> pwd
+                         <*> tmpDir
+                         <*> user
                          <*> vcapApplication
 
-mkApplication :: Int -> String -> String -> a -> Application
-mkApplication port home memoryLimit _ =
+mkApplication :: Int -> String -> String -> String -> String -> String -> a -> Application
+mkApplication port home memoryLimit pwd tmpDir user _ =
   Application { port = port
               , home = home
               , memoryLimit = memoryLimit
+              , pwd = pwd
+              , tmpDir = tmpDir
+              , user = user
               }
 
-lookupEnvOrError :: String -> String -> IO (Either String String)
-lookupEnvOrError envName error = do
+lookupEnvOrError :: String -> IO (Either String String)
+lookupEnvOrError envName = do
   value <- lookupEnv envName
-  return $ maybeToEither error value
+  return $ maybeToEither (envName ++ " is not set.") value
 
 numberOrError :: (String -> String) -> String -> Either String Int
 numberOrError error value =
