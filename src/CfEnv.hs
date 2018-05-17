@@ -58,6 +58,6 @@ numberOrError error value =
 
 maybeToEither :: e -> Maybe v -> Either e v
 maybeToEither error =
-  (\case
+  \case
     Just value -> Right value
-    Nothing    -> Left error)
+    Nothing    -> Left error
