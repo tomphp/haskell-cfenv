@@ -1,3 +1,5 @@
+{-# LANGUAGE LambdaCase #-}
+
 module CFEnv
   ( Application(..)
   , current
@@ -43,7 +45,7 @@ numberOrError error value =
   maybeToEither (error value) (readMaybe value)
 
 maybeToEither :: e -> Maybe v -> Either e v
-maybeToEither error maybe =
-  case maybe of
+maybeToEither error =
+  (\case
     Just value -> Right value
-    Nothing    -> Left error
+    Nothing    -> Left error)
