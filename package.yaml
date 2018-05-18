@@ -23,8 +23,9 @@ library:
   dependencies:
   - aeson
   - bytestring
-  - text
+  - lens
   - mtl
+  - text
   - transformers-either
 
 tests:

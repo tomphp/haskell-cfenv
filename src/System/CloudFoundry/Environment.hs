@@ -37,27 +37,32 @@ current :: IO (Either String Application)
 current = runEitherT currentT
 
 currentT :: EitherT String IO Application
-currentT = do
+currentT = appFromVcapApplication >>= addEnvVarsToApplication
+
+appFromVcapApplication :: EitherT String IO Application
+appFromVcapApplication = do
+  vcapApplication <- liftIO $ lookupEnvOrError "VCAP_APPLICATION"
+
+  liftEither $ mapLeft (\e -> "VCAP_APPLICATION " ++ e) (vcapApplication >>= decodeVcapApp)
+
+addEnvVarsToApplication :: Application -> EitherT String IO Application
+addEnvVarsToApplication application = do
   home <- liftIO $ lookupEnvOrError "HOME"
   memoryLimit <- liftIO $ lookupEnvOrError "MEMORY_LIMIT"
   pwd <- liftIO $ lookupEnvOrError "PWD"
   port <- liftIO $ lookupEnvOrError "PORT"
   tmpDir <- liftIO $ lookupEnvOrError "TMPDIR"
   user <- liftIO $ lookupEnvOrError "USER"
-  vcapApplication <- liftIO $ lookupEnvOrError "VCAP_APPLICATION"
 
   let portNumber = port >>= numberOrError (\p -> "PORT must be an integer, got '" ++ p ++ "'.")
 
-  let application = mapLeft (\e -> "VCAP_APPLICATION " ++ e) (vcapApplication >>= decodeVcapApp)
-
-  liftEither $ setEnvVars <$> home
+  liftEither $ setEnvVars application
+                          <$> home
                           <*> memoryLimit
                           <*> pwd
                           <*> portNumber
                           <*> tmpDir
                           <*> user
-                          <*> vcapApplication
-                          <*> application
 
 decodeVcapApp :: String -> Either String Application
 decodeVcapApp =
@@ -94,7 +99,7 @@ instance Aeson.FromJSON Application where
     version <- o Aeson..: "version"
 
     return emptyApplication
-      {  appId = appId
+      { appId = appId
       , cfApi = cfApi
       , host = host
       , instanceId = instanceId
@@ -105,8 +110,8 @@ instance Aeson.FromJSON Application where
       , version = version
       }
 
-setEnvVars :: String -> String -> String -> Int -> String -> String -> String -> Application -> Application
-setEnvVars home memoryLimit pwd port tmpDir user vcapApplication application =
+setEnvVars :: Application -> String -> String -> String -> Int -> String -> String -> Application
+setEnvVars application home memoryLimit pwd port tmpDir user =
   application { home = home
               , memoryLimit = memoryLimit
               , pwd = pwd

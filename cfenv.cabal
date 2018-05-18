@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 4758939b3702703edbca9e31141fc5da0b00886901cbd1f8f92ec080f4e089ef
+-- hash: cdcb44e277dfc45954d22318752a6ee1fe6350275a7aeb23f81b6fa3488e2b86
 
 name:           cfenv
 version:        0.1.0.0
@@ -33,6 +33,7 @@ library
       aeson
     , base >=4.7 && <5
     , bytestring
+    , lens
     , mtl
     , text
     , transformers-either
