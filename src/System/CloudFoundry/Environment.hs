@@ -6,9 +6,12 @@ module System.CloudFoundry.Environment
   , current
   ) where
 
+import Control.Monad.IO.Class (liftIO)
 import System.Environment (lookupEnv)
 import Text.Read (readMaybe)
 
+import Control.Monad.Trans.Either (EitherT, runEitherT)
+import Control.Monad.Except (liftEither)
 import qualified Data.Aeson as Aeson
 import qualified Data.ByteString.Lazy.Char8 as BL
 
@@ -31,27 +34,30 @@ data Application = Application
   } deriving (Eq, Show)
 
 current :: IO (Either String Application)
-current = do
-  home <- lookupEnvOrError "HOME"
-  memoryLimit <- lookupEnvOrError "MEMORY_LIMIT"
-  pwd <- lookupEnvOrError "PWD"
-  port <- lookupEnvOrError "PORT"
-  tmpDir <- lookupEnvOrError "TMPDIR"
-  user <- lookupEnvOrError "USER"
-  vcapApplication <- lookupEnvOrError "VCAP_APPLICATION"
+current = runEitherT currentT
+
+currentT :: EitherT String IO Application
+currentT = do
+  home <- liftIO $ lookupEnvOrError "HOME"
+  memoryLimit <- liftIO $ lookupEnvOrError "MEMORY_LIMIT"
+  pwd <- liftIO $ lookupEnvOrError "PWD"
+  port <- liftIO $ lookupEnvOrError "PORT"
+  tmpDir <- liftIO $ lookupEnvOrError "TMPDIR"
+  user <- liftIO $ lookupEnvOrError "USER"
+  vcapApplication <- liftIO $ lookupEnvOrError "VCAP_APPLICATION"
 
   let portNumber = port >>= numberOrError (\p -> "PORT must be an integer, got '" ++ p ++ "'.")
 
   let application = mapLeft (\e -> "VCAP_APPLICATION " ++ e) (vcapApplication >>= decodeVcapApp)
 
-  return $ setEnvVars <$> home
-                      <*> memoryLimit
-                      <*> pwd
-                      <*> portNumber
-                      <*> tmpDir
-                      <*> user
-                      <*> vcapApplication
-                      <*> application
+  liftEither $ setEnvVars <$> home
+                          <*> memoryLimit
+                          <*> pwd
+                          <*> portNumber
+                          <*> tmpDir
+                          <*> user
+                          <*> vcapApplication
+                          <*> application
 
 decodeVcapApp :: String -> Either String Application
 decodeVcapApp =

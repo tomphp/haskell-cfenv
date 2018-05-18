@@ -22,8 +22,10 @@ library:
   - System.CloudFoundry.Environment
   dependencies:
   - aeson
-  - text
   - bytestring
+  - text
+  - mtl
+  - transformers-either
 
 tests:
   cfenv-test:

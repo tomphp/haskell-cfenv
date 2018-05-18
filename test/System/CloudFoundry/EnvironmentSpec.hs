@@ -9,6 +9,7 @@ import Text.RawString.QQ
 
 import qualified System.CloudFoundry.Environment as CfEnv
 
+vcapApplicationJson :: String
 vcapApplicationJson = [r|{
 	"instance_id": "abc_instance_id",
 	"application_id": "abc_application_id",
