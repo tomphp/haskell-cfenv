@@ -1,44 +1,57 @@
-name:                cfenv
-version:             0.1.0.0
-synopsis:            A library getting the environment when running on Cloud Foundry
-description:         This is a port of go-cfenv for Golang. The purpose of this library is to assist you in writing Haskell apps that run on Cloud Foundry. It provides convenience functions and structures that map to Cloud Foundry environment variable primitives.
-homepage:            https://github.com/tomphp/haskell-cfenv#readme
-license:             BSD3
-license-file:        LICENSE
-author:              Tom Oram
-maintainer:          tom@codept.com
-copyright:           2017, Tom Oram
-category:            Library
-build-type:          Simple
-extra-source-files:  README.md
-cabal-version:       >=1.10
+-- This file has been generated from package.yaml by hpack version 0.20.0.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: 3099c2d5fb5875c55f292ce6ffab3ee3e8fe475c7460f3fab5394d7328a128a7
+
+name:           cfenv
+version:        0.1.0.0
+synopsis:       A library getting the environment when running on Cloud Foundry
+description:    This is a port of go-cfenv for Golang. The purpose of this library is to assist you in writing Haskell apps that run on Cloud Foundry. It provides convenience functions and structures that map to Cloud Foundry environment variable primitives.
+category:       Library
+homepage:       https://github.com/tomphp/haskell-cfenv#readme
+bug-reports:    https://github.com/tomphp/haskell-cfenv/issues
+author:         Tom Oram
+maintainer:     tom@codept.com
+copyright:      2018, Tom Oram
+license:        BSD3
+license-file:   LICENSE
+build-type:     Simple
+cabal-version:  >= 1.10
+
+extra-source-files:
+    README.md
 
 source-repository head
-  type:     git
-  location: https://github.com/tomphp/cfenv
+  type: git
+  location: https://github.com/tomphp/haskell-cfenv
 
 library
-  hs-source-dirs:      src
+  hs-source-dirs:
+      src/
+  build-depends:
+      aeson
+    , base >=4.7 && <5
+    , bytestring
+    , text
   exposed-modules:
       System.CloudFoundry.Environment
-  build-depends:
-      base >= 4.7 && < 5
-    , aeson
-    , text
-    , bytestring
-  default-language:    Haskell2010
+  other-modules:
+      Paths_cfenv
+  default-language: Haskell2010
 
 test-suite cfenv-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   hs-source-dirs:
-      test
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+      test/
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall -Werror
   build-depends:
       base >=4.7 && <5
     , cfenv
-    , hspec == 2.*
+    , hspec ==2.*
     , raw-strings-qq
   other-modules:
       System.CloudFoundry.EnvironmentSpec
+      Paths_cfenv
   default-language: Haskell2010

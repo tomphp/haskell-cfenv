@@ -1,0 +1,36 @@
+name:                cfenv
+version:             0.1.0.0
+synopsis:            A library getting the environment when running on Cloud Foundry
+description:         This is a port of go-cfenv for Golang. The purpose of this library is to assist you in writing Haskell apps that run on Cloud Foundry. It provides convenience functions and structures that map to Cloud Foundry environment variable primitives.
+homepage:            https://github.com/tomphp/haskell-cfenv#readme
+github:              tomphp/haskell-cfenv
+license:             BSD3
+license-file:        LICENSE
+author:              Tom Oram
+maintainer:          tom@codept.com
+copyright:           2018, Tom Oram
+category:            Library
+build-type:          Simple
+extra-source-files:  README.md
+
+dependencies:
+- base >= 4.7 && < 5
+
+library:
+  source-dirs: src/
+  exposed-modules:
+  - System.CloudFoundry.Environment
+  dependencies:
+  - aeson
+  - text
+  - bytestring
+
+tests:
+  cfenv-test:
+    main: Spec.hs
+    source-dirs: test/
+    ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall -Werror
+    dependencies:
+    - cfenv
+    - hspec == 2.*
+    - raw-strings-qq
