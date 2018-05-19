@@ -22,7 +22,11 @@ vcapApplicationJson = [r|{
 	"space_id": "abc_space_id",
 	"space_name": "development",
 	"cf_api": "https://api.sys.foundation",
-	"limits": {}
+	"limits": {
+	  "disk": 1024,
+    "fds": 16384,
+    "mem": 2048
+	}
 }|]
 
 {-
@@ -128,4 +132,9 @@ spec = do
                                 , CfEnv.spaceName = "development"
                                 , CfEnv.user = "tom"
                                 , CfEnv.version = "xxx_version"
+                                , CfEnv.limits = CfEnv.Limits
+                                  { CfEnv.disk = 1024
+                                  , CfEnv.fds  = 16384
+                                  , CfEnv.mem  = 2048
+                                  }
                                 }

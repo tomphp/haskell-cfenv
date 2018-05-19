@@ -1,16 +1,20 @@
+{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module System.CloudFoundry.Environment
   ( Application(..)
+  , Limits (..)
   , current
   ) where
 
 import Control.Monad (join)
+import GHC.Generics
 import System.Environment (lookupEnv)
 import Text.Read (readMaybe)
 
+import Data.Aeson (FromJSON)
 import qualified Data.Aeson as A
 import qualified Data.Aeson.Types as AT
 import qualified Data.ByteString.Lazy.Char8 as BL
@@ -22,6 +26,7 @@ data Application = Application
   , host :: String
   , instanceId :: String
   , index :: Int
+  , limits :: Limits
   , memoryLimit :: String
   , name :: String
   , pwd :: String
@@ -32,6 +37,14 @@ data Application = Application
   , user :: String
   , version :: String
   } deriving (Eq, Show)
+
+data Limits = Limits
+  { disk :: Int
+  , fds :: Int
+  , mem :: Int
+  } deriving (Eq, Show, Generic)
+
+instance FromJSON Limits
 
 current :: IO (Either String Application)
 current =  do
@@ -71,6 +84,7 @@ vcapApplicationParser home memoryLimit pwd port tmpDir user =
     host <- o A..: "host"
     instanceId <- o A..: "instance_id"
     index <- o A..: "instance_index"
+    limits <- o A..: "limits"
     name <- o A..: "name"
     spaceId <- o A..: "space_id"
     spaceName <- o A..: "space_name"
