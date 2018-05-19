@@ -21,6 +21,7 @@ import qualified Data.ByteString.Lazy.Char8 as BL
 
 data Application = Application
   { appId :: String
+  , applicationUris :: [String]
   , cfApi :: String
   , home :: String
   , host :: String
@@ -80,6 +81,7 @@ vcapApplicationParser :: String
 vcapApplicationParser home memoryLimit pwd port tmpDir user =
   A.withObject "Application" $ \o -> do
     appId <- o .: "application_id"
+    applicationUris <- o .: "application_uris"
     cfApi <- o .: "cf_api"
     host <- o .: "host"
     instanceId <- o .: "instance_id"

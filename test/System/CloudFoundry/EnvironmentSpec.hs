@@ -13,6 +13,9 @@ vcapApplicationJson :: String
 vcapApplicationJson = [r|{
 	"instance_id": "abc_instance_id",
 	"application_id": "abc_application_id",
+  "application_uris": [
+    "haskell-test.cfapps.io"
+  ],
 	"instance_index": 100,
 	"name": "app_name",
 	"port": 1080,
@@ -28,31 +31,6 @@ vcapApplicationJson = [r|{
     "mem": 2048
 	}
 }|]
-
-{-
- "VCAP_APPLICATION": {
-  "application_id": "ef1d4861-0e4f-4b10-b662-678d183e1772",
-  "application_name": "haskell-test",
-  "application_uris": [
-   "haskell-test.cfapps.io"
-  ],
-  "application_version": "922bd52a-2203-4dc9-b596-4c4ed947ef4b",
-  "cf_api": "https://api.run.pivotal.io",
-  "limits": {
-   "disk": 1024,
-   "fds": 16384,
-   "mem": 2048
-  },
-  "name": "haskell-test",
-  "space_id": "95b9361a-4864-4aab-931d-5094b862fa0e",
-  "space_name": "development",
-  "uris": [
-   "haskell-test.cfapps.io"
-  ],
-  "users": null,
-  "version": "922bd52a-2203-4dc9-b596-4c4ed947ef4b"
- }
--}
 
 spec :: Spec
 spec = do
@@ -118,6 +96,7 @@ spec = do
 
           app `shouldBe` Right CfEnv.Application
                                 { CfEnv.appId = "abc_application_id"
+                                , CfEnv.applicationUris = ["haskell-test.cfapps.io"]
                                 , CfEnv.cfApi = "https://api.sys.foundation"
                                 , CfEnv.home = "/home/userZ"
                                 , CfEnv.host = "app_host"

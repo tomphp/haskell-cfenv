@@ -15,8 +15,8 @@ Cloud Foundry environment variable primitives.
 
 - [x] Read environment variables into `Application`
 - [x] Read basic values from `VCAP_APPLICATION` into `Application`
-- [ ] Read application URIs into `Application`
-- [ ] Read limits into `Application`
+- [x] Read application URIs into `Application`
+- [x] Read limits into `Application`
 - [ ] Read `VCAP_SERVICES`
 
 ## Usage
