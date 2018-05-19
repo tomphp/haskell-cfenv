@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 29578027e050a07cf3a9e27ad173150a6ce922e775d4c72d0c4fb099d216f123
+-- hash: 2f5a14df945c10451aa8c77dba1364ec2a3d63604b4dfb56114f4a9aa5aa1c98
 
 name:           cfenv
 version:        0.1.0.0
@@ -34,6 +34,7 @@ library
     , base >=4.7 && <5
     , bytestring
     , lens
+    , text
   exposed-modules:
       System.CloudFoundry.Environment
   other-modules:

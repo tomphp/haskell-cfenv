@@ -7,9 +7,11 @@ module System.CloudFoundry.Environment
   ( Application(..)
   , Limits (..)
   , current
+  , isRunningOnCf
   ) where
 
 import Control.Monad (join)
+import Data.Char (isSpace)
 import GHC.Generics
 import System.Environment (lookupEnv)
 import Text.Read (readMaybe)
@@ -46,6 +48,17 @@ data Limits = Limits
   } deriving (Eq, Show, Generic)
 
 instance FromJSON Limits
+
+isRunningOnCf :: IO Bool
+isRunningOnCf = do
+  vcapApplication <- lookupEnv "VCAP_APPLICATION"
+
+  return $ case vcapApplication of
+            Just value ->
+              if dropWhile isSpace value == ""
+                then False
+                else True
+            Nothing -> False
 
 current :: IO (Either String Application)
 current =  do

@@ -35,6 +35,27 @@ vcapApplicationJson = [r|{
 spec :: Spec
 spec = do
   describe "CfEnv" $ do
+    describe "isRunningOnCf" $ do
+      it "returns true if VCAP_APPLICATION has a value" $ do
+        setEnv "VCAP_APPLICATION" "{}"
+        runningOnCf <- CfEnv.isRunningOnCf
+        runningOnCf `shouldBe` True
+
+      it "returns true if VCAP_APPLICATION is not set" $ do
+        unsetEnv "VCAP_APPLICATION"
+        runningOnCf <- CfEnv.isRunningOnCf
+        runningOnCf `shouldBe` False
+
+      it "returns true if VCAP_APPLICATION is empty" $ do
+        setEnv "VCAP_APPLICATION" ""
+        runningOnCf <- CfEnv.isRunningOnCf
+        runningOnCf `shouldBe` False
+
+      it "returns true if VCAP_APPLICATION is only whitespace" $ do
+        setEnv "VCAP_APPLICATION" "    "
+        runningOnCf <- CfEnv.isRunningOnCf
+        runningOnCf `shouldBe` False
+
     describe "current" $ before
       (do
         setEnv "HOME" "/home/userZ"

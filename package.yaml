@@ -24,6 +24,7 @@ library:
   - aeson
   - bytestring
   - lens
+  - text
 
 tests:
   cfenv-test:
