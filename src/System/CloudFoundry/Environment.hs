@@ -1,4 +1,5 @@
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module System.CloudFoundry.Environment
@@ -6,13 +7,12 @@ module System.CloudFoundry.Environment
   , current
   ) where
 
-import Control.Monad.IO.Class (liftIO)
+import Control.Monad (join)
 import System.Environment (lookupEnv)
 import Text.Read (readMaybe)
 
-import Control.Monad.Trans.Either (EitherT, runEitherT)
-import Control.Monad.Except (liftEither)
-import qualified Data.Aeson as Aeson
+import qualified Data.Aeson as A
+import qualified Data.Aeson.Types as AT
 import qualified Data.ByteString.Lazy.Char8 as BL
 
 data Application = Application
@@ -34,96 +34,59 @@ data Application = Application
   } deriving (Eq, Show)
 
 current :: IO (Either String Application)
-current = runEitherT currentT
+current =  do
+  home <- stringFromEnv "HOME"
+  memoryLimit <- stringFromEnv "MEMORY_LIMIT"
+  pwd <- stringFromEnv "PWD"
+  port <- numberFromEnv "PORT"
+  tmpDir <- stringFromEnv "TMPDIR"
+  user <- stringFromEnv "USER"
+  vcapApplication <- stringFromEnv "VCAP_APPLICATION"
 
-currentT :: EitherT String IO Application
-currentT = appFromVcapApplication >>= addEnvVarsToApplication
+  let parser = vcapApplicationParser <$> home
+                                     <*> memoryLimit
+                                     <*> pwd
+                                     <*> port
+                                     <*> tmpDir
+                                     <*> user
 
-appFromVcapApplication :: EitherT String IO Application
-appFromVcapApplication = do
-  vcapApplication <- liftIO $ lookupEnvOrError "VCAP_APPLICATION"
+  return $ join (decodeVcapApplication <$> parser <*> vcapApplication)
 
-  liftEither $ mapLeft (\e -> "VCAP_APPLICATION " ++ e) (vcapApplication >>= decodeVcapApp)
+decodeVcapApplication :: (A.Value -> AT.Parser Application) -> String -> Either String Application
+decodeVcapApplication parser json =
+  mapLeft ("VCAP_APPLICATION " ++)
+    (A.eitherDecode (BL.pack json) >>= AT.parseEither parser)
 
-addEnvVarsToApplication :: Application -> EitherT String IO Application
-addEnvVarsToApplication application = do
-  home <- liftIO $ lookupEnvOrError "HOME"
-  memoryLimit <- liftIO $ lookupEnvOrError "MEMORY_LIMIT"
-  pwd <- liftIO $ lookupEnvOrError "PWD"
-  port <- liftIO $ lookupEnvOrError "PORT"
-  tmpDir <- liftIO $ lookupEnvOrError "TMPDIR"
-  user <- liftIO $ lookupEnvOrError "USER"
+vcapApplicationParser :: String
+                      -> String
+                      -> String
+                      -> Int
+                      -> String
+                      -> String
+                      -> A.Value -> AT.Parser Application
+vcapApplicationParser home memoryLimit pwd port tmpDir user =
+  A.withObject "Application" $ \o -> do
+    appId <- o A..: "application_id"
+    cfApi <- o A..: "cf_api"
+    host <- o A..: "host"
+    instanceId <- o A..: "instance_id"
+    index <- o A..: "instance_index"
+    name <- o A..: "name"
+    spaceId <- o A..: "space_id"
+    spaceName <- o A..: "space_name"
+    version <- o A..: "version"
 
-  let portNumber = port >>= numberOrError (\p -> "PORT must be an integer, got '" ++ p ++ "'.")
+    return Application {..}
 
-  liftEither $ setEnvVars application
-                          <$> home
-                          <*> memoryLimit
-                          <*> pwd
-                          <*> portNumber
-                          <*> tmpDir
-                          <*> user
-
-decodeVcapApp :: String -> Either String Application
-decodeVcapApp =
-  Aeson.eitherDecode . BL.pack
-
-emptyApplication = Application
-  { appId = ""
-  , cfApi = ""
-  , home = ""
-  , host = ""
-  , instanceId = ""
-  , index = 0
-  , memoryLimit = ""
-  , name = ""
-  , pwd = ""
-  , port = 8080
-  , tmpDir = ""
-  , spaceId = ""
-  , spaceName = ""
-  , user = ""
-  , version = ""
-  }
-
-instance Aeson.FromJSON Application where
-  parseJSON = Aeson.withObject "Application" $ \o -> do
-    appId <- o Aeson..: "application_id"
-    cfApi <- o Aeson..: "cf_api"
-    host <- o Aeson..: "host"
-    instanceId <- o Aeson..: "instance_id"
-    index <- o Aeson..: "instance_index"
-    name <- o Aeson..: "name"
-    spaceId <- o Aeson..: "space_id"
-    spaceName <- o Aeson..: "space_name"
-    version <- o Aeson..: "version"
-
-    return emptyApplication
-      { appId = appId
-      , cfApi = cfApi
-      , host = host
-      , instanceId = instanceId
-      , index = index
-      , name = name
-      , spaceId = spaceId
-      , spaceName = spaceName
-      , version = version
-      }
-
-setEnvVars :: Application -> String -> String -> String -> Int -> String -> String -> Application
-setEnvVars application home memoryLimit pwd port tmpDir user =
-  application { home = home
-              , memoryLimit = memoryLimit
-              , pwd = pwd
-              , port = port
-              , tmpDir = tmpDir
-              , user = user
-              }
-
-lookupEnvOrError :: String -> IO (Either String String)
-lookupEnvOrError envName = do
+stringFromEnv :: String -> IO (Either String String)
+stringFromEnv envName = do
   value <- lookupEnv envName
   return $ maybeToEither (envName ++ " is not set.") value
+
+numberFromEnv :: String -> IO (Either String Int)
+numberFromEnv envName = do
+  string <- stringFromEnv envName
+  return $ string >>= numberOrError (\p -> "PORT must be an integer, got '" ++ p ++ "'.")
 
 numberOrError :: (String -> String) -> String -> Either String Int
 numberOrError error value =
