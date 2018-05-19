@@ -14,7 +14,7 @@ import GHC.Generics
 import System.Environment (lookupEnv)
 import Text.Read (readMaybe)
 
-import Data.Aeson (FromJSON)
+import Data.Aeson ((.:), FromJSON)
 import qualified Data.Aeson as A
 import qualified Data.Aeson.Types as AT
 import qualified Data.ByteString.Lazy.Char8 as BL
@@ -79,16 +79,16 @@ vcapApplicationParser :: String
                       -> A.Value -> AT.Parser Application
 vcapApplicationParser home memoryLimit pwd port tmpDir user =
   A.withObject "Application" $ \o -> do
-    appId <- o A..: "application_id"
-    cfApi <- o A..: "cf_api"
-    host <- o A..: "host"
-    instanceId <- o A..: "instance_id"
-    index <- o A..: "instance_index"
-    limits <- o A..: "limits"
-    name <- o A..: "name"
-    spaceId <- o A..: "space_id"
-    spaceName <- o A..: "space_name"
-    version <- o A..: "version"
+    appId <- o .: "application_id"
+    cfApi <- o .: "cf_api"
+    host <- o .: "host"
+    instanceId <- o .: "instance_id"
+    index <- o .: "instance_index"
+    limits <- o .: "limits"
+    name <- o .: "name"
+    spaceId <- o .: "space_id"
+    spaceName <- o .: "space_name"
+    version <- o .: "version"
 
     return Application {..}
 
