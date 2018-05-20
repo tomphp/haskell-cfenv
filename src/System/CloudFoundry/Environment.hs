@@ -138,22 +138,22 @@ decodeVcapServices =
     addErrorPrefix = mapLeft ("VCAP_SERVICES " ++)
 
 servicesFromEnv :: EitherT String IO [Service]
-servicesFromEnv = do
-    vcapServices <- liftIO $ lookupEnv "VCAP_SERVICES"
-
-    liftEither $ fromMaybe (Right []) $ decodeVcapServices <$> vcapServices
+servicesFromEnv =
+    liftEither . fromMaybe (Right []) . fmap decodeVcapServices =<< lookupEnv' "VCAP_SERVICES"
 
 stringFromEnv :: String -> EitherT String IO String
 stringFromEnv envName =
-    (liftIO $ lookupEnv envName) >>= liftEither . maybeToEither (envName ++ " is not set.")
+    liftEither . maybeToEither (envName ++ " is not set.") =<< lookupEnv' envName
 
 numberFromEnv :: String -> EitherT String IO Int
 numberFromEnv envName =
-    stringFromEnv envName >>= liftEither . toNumber
+    liftEither . readEither errorMessage =<< stringFromEnv envName
   where
-    toNumber = readEither errorMessage
-    readEither error value = maybeToEither (error value) (readMaybe value)
+    readEither error value = maybeToEither (errorMessage value) (readMaybe value)
     errorMessage value = envName ++ " must be an integer, got '" ++ value ++ "'."
+
+lookupEnv' :: String -> EitherT String IO (Maybe String)
+lookupEnv' = liftIO . lookupEnv
 
 maybeToEither :: e -> Maybe v -> Either e v
 maybeToEither error =
