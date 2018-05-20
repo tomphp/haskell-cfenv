@@ -59,7 +59,8 @@ data Service = Service
     } deriving (Eq, Show, Generic)
 
 isRunningOnCf :: IO Bool
-isRunningOnCf = envHasValue "VCAP_APPLICATION"
+isRunningOnCf =
+    envHasValue "VCAP_APPLICATION"
   where
     envHasValue = lookupEnv >=> return . fromMaybe False . fmap isEmpty
     isEmpty = not . (==) "" . dropWhile isSpace
@@ -73,20 +74,24 @@ current = do
     tmpDir <- stringFromEnv "TMPDIR"
     user <- stringFromEnv "USER"
     vcapServices <- lookupEnv "VCAP_SERVICES"
+
     let services = decodeVcapServices <$> vcapServices
     let parser =
-            vcapApplicationParser <$> (fromMaybe (Right []) services) <*> home <*>
-            memoryLimit <*>
-            pwd <*>
-            port <*>
-            tmpDir <*>
-            user
+            vcapApplicationParser <$> (fromMaybe (Right []) services)
+                                  <*> home
+                                  <*> memoryLimit
+                                  <*> pwd
+                                  <*> port
+                                  <*> tmpDir
+                                  <*> user
+
     vcapApplication <- stringFromEnv "VCAP_APPLICATION"
+
     return $ join (decodeVcapApplication <$> parser <*> vcapApplication)
 
-decodeVcapApplication ::
-       (A.Value -> AT.Parser Application) -> String -> Either String Application
-decodeVcapApplication parser = addErrorPrefix . parseJson
+decodeVcapApplication :: (A.Value -> AT.Parser Application) -> String -> Either String Application
+decodeVcapApplication parser =
+    addErrorPrefix . parseJson
   where
     parseJson = (A.eitherDecode . BL.pack) >=> AT.parseEither parser
     addErrorPrefix = mapLeft ("VCAP_APPLICATION " ++)
@@ -121,22 +126,20 @@ instance FromJSON Limits
 instance FromJSON Service
 
 decodeVcapServices :: String -> Either String [Service]
-decodeVcapServices = addErrorPrefix . A.eitherDecode . BL.pack
+decodeVcapServices =
+    addErrorPrefix . A.eitherDecode . BL.pack
   where
     addErrorPrefix = mapLeft ("VCAP_SERVICES " ++)
 
 stringFromEnv :: String -> IO (Either String String)
-stringFromEnv envName = do
-    value <- lookupEnv envName
-    return $ maybeToEither (envName ++ " is not set.") value
+stringFromEnv envName =
+    lookupEnv envName >>= return . maybeToEither (envName ++ " is not set.")
 
 numberFromEnv :: String -> IO (Either String Int)
-numberFromEnv envName = do
-    string <- stringFromEnv envName
-    return $
-        string >>=
-        numberOrError
-            (\p -> envName ++ " must be an integer, got '" ++ p ++ "'.")
+numberFromEnv envName =
+    stringFromEnv envName >>= return . (>>= toNumber)
+  where
+    toNumber = numberOrError (\v -> envName ++ " must be an integer, got '" ++ v ++ "'.")
 
 numberOrError :: (String -> String) -> String -> Either String Int
 numberOrError error value = maybeToEither (error value) (readMaybe value)
