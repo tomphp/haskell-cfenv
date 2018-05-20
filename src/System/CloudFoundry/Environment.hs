@@ -10,8 +10,9 @@ module System.CloudFoundry.Environment
   , isRunningOnCf
   ) where
 
-import Control.Monad (join)
+import Control.Monad ((>=>), join)
 import Data.Char (isSpace)
+import Data.Maybe (fromMaybe)
 import GHC.Generics
 import System.Environment (lookupEnv)
 import Text.Read (readMaybe)
@@ -50,15 +51,9 @@ data Limits = Limits
 instance FromJSON Limits
 
 isRunningOnCf :: IO Bool
-isRunningOnCf = do
-  vcapApplication <- lookupEnv "VCAP_APPLICATION"
-
-  return $ case vcapApplication of
-            Just value ->
-              if dropWhile isSpace value == ""
-                then False
-                else True
-            Nothing -> False
+isRunningOnCf = envHasValue "VCAP_APPLICATION"
+  where envHasValue = lookupEnv >=> return . fromMaybe False . fmap isEmpty
+        isEmpty = not . (==) "" . dropWhile isSpace
 
 current :: IO (Either String Application)
 current =  do
@@ -68,7 +63,6 @@ current =  do
   port <- numberFromEnv "PORT"
   tmpDir <- stringFromEnv "TMPDIR"
   user <- stringFromEnv "USER"
-  vcapApplication <- stringFromEnv "VCAP_APPLICATION"
 
   let parser = vcapApplicationParser <$> home
                                      <*> memoryLimit
@@ -77,12 +71,14 @@ current =  do
                                      <*> tmpDir
                                      <*> user
 
+  vcapApplication <- stringFromEnv "VCAP_APPLICATION"
+
   return $ join (decodeVcapApplication <$> parser <*> vcapApplication)
 
 decodeVcapApplication :: (A.Value -> AT.Parser Application) -> String -> Either String Application
-decodeVcapApplication parser json =
-  mapLeft ("VCAP_APPLICATION " ++)
-    (A.eitherDecode (BL.pack json) >>= AT.parseEither parser)
+decodeVcapApplication parser = addErrorPrefix . parseJson
+  where parseJson = (A.eitherDecode . BL.pack) >=> AT.parseEither parser
+        addErrorPrefix = mapLeft ("VCAP_APPLICATION " ++)
 
 vcapApplicationParser :: String
                       -> String
@@ -115,7 +111,7 @@ stringFromEnv envName = do
 numberFromEnv :: String -> IO (Either String Int)
 numberFromEnv envName = do
   string <- stringFromEnv envName
-  return $ string >>= numberOrError (\p -> "PORT must be an integer, got '" ++ p ++ "'.")
+  return $ string >>= numberOrError (\p -> envName ++ " must be an integer, got '" ++ p ++ "'.")
 
 numberOrError :: (String -> String) -> String -> Either String Int
 numberOrError error value =
