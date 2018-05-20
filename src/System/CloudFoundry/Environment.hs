@@ -59,7 +59,7 @@ data Service = Service
     , label :: String
     , tags  :: [String]
     , plan  :: String
-    -- , credentials :: Map String ???
+    , credentials :: Map.Map String String
     } deriving (Eq, Show, Generic)
 
 type Services = Map.Map String [Service]

@@ -43,7 +43,11 @@ vcapServices =
                 "name": "service_name",
                 "label": "service_label",
                 "tags": ["tag_a"],
-                "plan": "service_plan"
+                "plan": "service_plan",
+                "credentials": {
+                    "username": "service_username",
+                    "password": "service_password"
+                }
             }]
         }
     |]
@@ -150,6 +154,10 @@ spec = do
                                                   , CfEnv.label = "service_label"
                                                   , CfEnv.tags = ["tag_a"]
                                                   , CfEnv.plan = "service_plan"
+                                                  , CfEnv.credentials =
+                                                        Map.fromList [ ("username", "service_username")
+                                                                     , ("password", "service_password")
+                                                                     ]
                                                   }
                                               ]
                                             )
