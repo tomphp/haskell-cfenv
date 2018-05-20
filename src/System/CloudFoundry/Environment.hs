@@ -15,6 +15,7 @@ import           Control.Monad              (join, (>=>))
 import           Control.Monad.IO.Class     (liftIO)
 import           Data.Char                  (isSpace)
 import           Data.Maybe                 (fromMaybe)
+import qualified Data.Map.Strict         as Map
 import           GHC.Generics
 import           System.Environment         (lookupEnv)
 import           Text.Read                  (readMaybe)
@@ -39,7 +40,7 @@ data Application = Application
     , appName         :: String
     , pwd             :: String
     , port            :: Int
-    , services        :: [Service]
+    , services        :: Services
     , spaceId         :: String
     , spaceName       :: String
     , tmpDir          :: String
@@ -60,6 +61,8 @@ data Service = Service
     , plan  :: String
     -- , credentials :: Map String ???
     } deriving (Eq, Show, Generic)
+
+type Services = Map.Map String [Service]
 
 -- | Detect if the application is running as a Cloud Foundry application.
 isRunningOnCf :: IO Bool
@@ -97,9 +100,9 @@ currentT = do
 
     liftEither $ decodeVcapApplication parser vcapApplication
 
-servicesFromEnv :: EitherT String IO [Service]
+servicesFromEnv :: EitherT String IO Services
 servicesFromEnv =
-    liftEither . maybe (Right []) decodeVcapServices =<< lookupEnv' "VCAP_SERVICES"
+    liftEither . maybe (Right Map.empty) decodeVcapServices =<< lookupEnv' "VCAP_SERVICES"
 
 stringFromEnv :: String -> EitherT String IO String
 stringFromEnv envName =
@@ -123,7 +126,7 @@ decodeVcapApplication parser =
     addErrorPrefix = mapLeft ("VCAP_APPLICATION " ++)
 
 vcapApplicationParser ::
-       [Service]
+       Services
     -> String
     -> String
     -> String
@@ -151,7 +154,7 @@ instance FromJSON Limits
 
 instance FromJSON Service
 
-decodeVcapServices :: String -> Either String [Service]
+decodeVcapServices :: String -> Either String Services
 decodeVcapServices =
     addErrorPrefix . A.eitherDecode . BL.pack
   where

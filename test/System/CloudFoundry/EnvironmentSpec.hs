@@ -3,6 +3,7 @@
 module System.CloudFoundry.EnvironmentSpec where
 
 import           Data.Either                     (isRight)
+import qualified Data.Map.Strict              as Map
 import           System.Environment              (setEnv, unsetEnv)
 
 import           Test.Hspec
@@ -37,12 +38,14 @@ vcapApplicationJson =
 vcapServices :: String
 vcapServices =
     [r|
-        [{
-            "name": "service_name",
-            "label": "service_label",
-            "tags": ["tag_a"],
-            "plan": "service_plan"
-        }]
+        {
+            "cleardb": [{
+                "name": "service_name",
+                "label": "service_label",
+                "tags": ["tag_a"],
+                "plan": "service_plan"
+            }]
+        }
     |]
 
 setEnvVars :: IO ()
@@ -139,6 +142,18 @@ spec = do
                                 , CfEnv.pwd = "/pwd"
                                 , CfEnv.port = 9000
                                 , CfEnv.tmpDir = "/tmpdir"
+                                , CfEnv.services =
+                                      Map.fromList
+                                          [ ("cleardb",
+                                              [ CfEnv.Service
+                                                  { CfEnv.name = "service_name"
+                                                  , CfEnv.label = "service_label"
+                                                  , CfEnv.tags = ["tag_a"]
+                                                  , CfEnv.plan = "service_plan"
+                                                  }
+                                              ]
+                                            )
+                                          ]
                                 , CfEnv.spaceId = "abc_space_id"
                                 , CfEnv.spaceName = "development"
                                 , CfEnv.user = "tom"
@@ -149,13 +164,5 @@ spec = do
                                           , CfEnv.fds = 16384
                                           , CfEnv.mem = 2048
                                           }
-                                , CfEnv.services =
-                                      [ CfEnv.Service
-                                            { CfEnv.name = "service_name"
-                                            , CfEnv.label = "service_label"
-                                            , CfEnv.tags = ["tag_a"]
-                                            , CfEnv.plan = "service_plan"
-                                            }
-                                      ]
                                 }
                     app `shouldBe` Right expected

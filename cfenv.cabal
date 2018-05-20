@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: cdcb44e277dfc45954d22318752a6ee1fe6350275a7aeb23f81b6fa3488e2b86
+-- hash: 37975e6ebd360e2a8e6e4a68554d007e3ecf4255f85412f6dbeafbc48beebdb9
 
 name:           cfenv
 version:        0.1.0.0
@@ -33,6 +33,7 @@ library
       aeson
     , base >=4.7 && <5
     , bytestring
+    , containers
     , lens
     , mtl
     , text
@@ -52,6 +53,7 @@ test-suite cfenv-test
   build-depends:
       base >=4.7 && <5
     , cfenv
+    , containers
     , hspec ==2.*
     , raw-strings-qq
   other-modules:
