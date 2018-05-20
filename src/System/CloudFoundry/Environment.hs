@@ -61,6 +61,7 @@ data Service = Service
     -- , credentials :: Map String ???
     } deriving (Eq, Show, Generic)
 
+-- | Detect if the application is running as a Cloud Foundry application.
 isRunningOnCf :: IO Bool
 isRunningOnCf =
     envHasValue "VCAP_APPLICATION"
@@ -68,6 +69,7 @@ isRunningOnCf =
     envHasValue = lookupEnv >=> return . maybe False isEmpty
     isEmpty = not . (==) "" . dropWhile isSpace
 
+-- | Get the current Cloud Foundry environment.
 current :: IO (Either String Application)
 current = runEitherT currentT
 
