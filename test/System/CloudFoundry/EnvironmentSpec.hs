@@ -2,6 +2,7 @@
 
 module System.CloudFoundry.EnvironmentSpec where
 
+import Data.Either (isRight)
 import System.Environment (setEnv, unsetEnv)
 
 import Test.Hspec
@@ -122,6 +123,16 @@ spec = do
                     setEnv "VCAP_APPLICATION" "not-json"
                     app <- CfEnv.current
                     app `shouldBe` Left "VCAP_APPLICATION Error in $: string"
+
+                it "returns Application if VCAP_SERVICES is not set" $ do
+                    unsetEnv "VCAP_SERVICES"
+                    app <- CfEnv.current
+                    app `shouldSatisfy` isRight
+
+                it "returns error if VCAP_SERVICES bad JSON" $ do
+                    setEnv "VCAP_SERVICES" "not-json"
+                    app <- CfEnv.current
+                    app `shouldBe` Left "VCAP_SERVICES Error in $: string"
 
                 it "returns Application when the environment is correct" $ do
                     app <- CfEnv.current

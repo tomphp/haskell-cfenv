@@ -50,8 +50,6 @@ data Limits = Limits
     , mem :: Int
     } deriving (Eq, Show, Generic)
 
-instance FromJSON Limits
-
 data Service = Service
     { name :: String
     , label :: String
@@ -60,7 +58,6 @@ data Service = Service
     -- , credentials :: Map String ???
     } deriving (Eq, Show, Generic)
 
-instance FromJSON Service
 
 isRunningOnCf :: IO Bool
 isRunningOnCf = envHasValue "VCAP_APPLICATION"
@@ -77,7 +74,7 @@ current =  do
     user <- stringFromEnv "USER"
 
     vcapServices <- lookupEnv "VCAP_SERVICES"
-    let services = fmap decodeVcapServices vcapServices
+    let services = decodeVcapServices <$> vcapServices
 
     let parser = vcapApplicationParser <$> (fromMaybe (Right []) services)
                                        <*> home
@@ -120,8 +117,12 @@ vcapApplicationParser services home memoryLimit pwd port tmpDir user =
 
         return Application {..}
 
+instance FromJSON Limits
+instance FromJSON Service
+
 decodeVcapServices :: String -> Either String [Service]
-decodeVcapServices = A.eitherDecode . BL.pack
+decodeVcapServices = addErrorPrefix . A.eitherDecode . BL.pack
+    where addErrorPrefix = mapLeft ("VCAP_SERVICES " ++)
 
 stringFromEnv :: String -> IO (Either String String)
 stringFromEnv envName = do
