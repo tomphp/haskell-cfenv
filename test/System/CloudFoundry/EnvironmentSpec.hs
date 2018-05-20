@@ -32,6 +32,16 @@ vcapApplicationJson = [r|{
 	}
 }|]
 
+vcapServices :: String
+vcapServices = [r|
+  [{
+    "name": "service_name",
+    "label": "service_label",
+    "tags": ["tag_a"],
+    "plan": "service_plan"
+  }]
+|]
+
 spec :: Spec
 spec = do
   describe "CfEnv" $ do
@@ -113,8 +123,8 @@ spec = do
           app `shouldBe` Left "VCAP_APPLICATION Error in $: string"
 
         it "returns Application when the environment is correct" $ do
+          setEnv "VCAP_SERVICES" vcapServices
           app <- CfEnv.current
-
           app `shouldBe` Right CfEnv.Application
                                 { CfEnv.appId = "abc_application_id"
                                 , CfEnv.applicationUris = ["haskell-test.cfapps.io"]
@@ -124,7 +134,7 @@ spec = do
                                 , CfEnv.instanceId = "abc_instance_id"
                                 , CfEnv.index = 100
                                 , CfEnv.memoryLimit = "256M"
-                                , CfEnv.name = "app_name"
+                                , CfEnv.appName = "app_name"
                                 , CfEnv.pwd = "/pwd"
                                 , CfEnv.port = 9000
                                 , CfEnv.tmpDir = "/tmpdir"
@@ -137,4 +147,12 @@ spec = do
                                   , CfEnv.fds  = 16384
                                   , CfEnv.mem  = 2048
                                   }
+                                , CfEnv.services =
+                                  [ CfEnv.Service
+                                      { CfEnv.name = "service_name"
+                                      , CfEnv.label = "service_label"
+                                      , CfEnv.tags = ["tag_a"]
+                                      , CfEnv.plan = "service_plan"
+                                      }
+                                  ]
                                 }

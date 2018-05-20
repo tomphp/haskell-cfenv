@@ -6,6 +6,7 @@
 module System.CloudFoundry.Environment
   ( Application(..)
   , Limits (..)
+  , Service (..)
   , current
   , isRunningOnCf
   ) where
@@ -32,9 +33,10 @@ data Application = Application
   , index :: Int
   , limits :: Limits
   , memoryLimit :: String
-  , name :: String
+  , appName :: String
   , pwd :: String
   , port :: Int
+  , services :: [Service]
   , spaceId :: String
   , spaceName :: String
   , tmpDir :: String
@@ -50,6 +52,16 @@ data Limits = Limits
 
 instance FromJSON Limits
 
+data Service = Service
+  { name :: String
+  , label :: String
+  , tags :: [String]
+  , plan :: String
+  -- , credentials :: Map String ???
+  } deriving (Eq, Show, Generic)
+
+instance FromJSON Service
+
 isRunningOnCf :: IO Bool
 isRunningOnCf = envHasValue "VCAP_APPLICATION"
   where envHasValue = lookupEnv >=> return . fromMaybe False . fmap isEmpty
@@ -64,7 +76,11 @@ current =  do
   tmpDir <- stringFromEnv "TMPDIR"
   user <- stringFromEnv "USER"
 
-  let parser = vcapApplicationParser <$> home
+  vcapServices <- lookupEnv "VCAP_SERVICES"
+  let services = fmap decodeVcapServices vcapServices
+
+  let parser = vcapApplicationParser <$> (fromMaybe (Right []) services)
+                                     <*> home
                                      <*> memoryLimit
                                      <*> pwd
                                      <*> port
@@ -80,14 +96,15 @@ decodeVcapApplication parser = addErrorPrefix . parseJson
   where parseJson = (A.eitherDecode . BL.pack) >=> AT.parseEither parser
         addErrorPrefix = mapLeft ("VCAP_APPLICATION " ++)
 
-vcapApplicationParser :: String
+vcapApplicationParser :: [Service]
+                      -> String
                       -> String
                       -> String
                       -> Int
                       -> String
                       -> String
                       -> A.Value -> AT.Parser Application
-vcapApplicationParser home memoryLimit pwd port tmpDir user =
+vcapApplicationParser services home memoryLimit pwd port tmpDir user =
   A.withObject "Application" $ \o -> do
     appId <- o .: "application_id"
     applicationUris <- o .: "application_uris"
@@ -96,12 +113,15 @@ vcapApplicationParser home memoryLimit pwd port tmpDir user =
     instanceId <- o .: "instance_id"
     index <- o .: "instance_index"
     limits <- o .: "limits"
-    name <- o .: "name"
+    appName <- o .: "name"
     spaceId <- o .: "space_id"
     spaceName <- o .: "space_name"
     version <- o .: "version"
 
     return Application {..}
+
+decodeVcapServices :: String -> Either String [Service]
+decodeVcapServices = A.eitherDecode . BL.pack
 
 stringFromEnv :: String -> IO (Either String String)
 stringFromEnv envName = do
