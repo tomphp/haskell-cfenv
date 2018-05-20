@@ -61,8 +61,8 @@ data Service = Service
 
 isRunningOnCf :: IO Bool
 isRunningOnCf = envHasValue "VCAP_APPLICATION"
-    where envHasValue = lookupEnv >=> return . fromMaybe False . fmap isEmpty
-          isEmpty = not . (==) "" . dropWhile isSpace
+  where envHasValue = lookupEnv >=> return . fromMaybe False . fmap isEmpty
+        isEmpty = not . (==) "" . dropWhile isSpace
 
 current :: IO (Either String Application)
 current =  do
@@ -90,8 +90,8 @@ current =  do
 
 decodeVcapApplication :: (A.Value -> AT.Parser Application) -> String -> Either String Application
 decodeVcapApplication parser = addErrorPrefix . parseJson
-    where parseJson = (A.eitherDecode . BL.pack) >=> AT.parseEither parser
-          addErrorPrefix = mapLeft ("VCAP_APPLICATION " ++)
+  where parseJson = (A.eitherDecode . BL.pack) >=> AT.parseEither parser
+        addErrorPrefix = mapLeft ("VCAP_APPLICATION " ++)
 
 vcapApplicationParser :: [Service]
                       -> String
@@ -122,7 +122,7 @@ instance FromJSON Service
 
 decodeVcapServices :: String -> Either String [Service]
 decodeVcapServices = addErrorPrefix . A.eitherDecode . BL.pack
-    where addErrorPrefix = mapLeft ("VCAP_SERVICES " ++)
+  where addErrorPrefix = mapLeft ("VCAP_SERVICES " ++)
 
 stringFromEnv :: String -> IO (Either String String)
 stringFromEnv envName = do
