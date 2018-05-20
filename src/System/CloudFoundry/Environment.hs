@@ -12,12 +12,15 @@ module System.CloudFoundry.Environment
     ) where
 
 import           Control.Monad              (join, (>=>))
+import           Control.Monad.IO.Class     (liftIO)
 import           Data.Char                  (isSpace)
 import           Data.Maybe                 (fromMaybe)
 import           GHC.Generics
 import           System.Environment         (lookupEnv)
 import           Text.Read                  (readMaybe)
 
+import           Control.Monad.Except       (liftEither)
+import           Control.Monad.Trans.Either (EitherT, runEitherT)
 import           Data.Aeson                 (FromJSON, (.:))
 import qualified Data.Aeson                 as A
 import qualified Data.Aeson.Types           as AT
@@ -66,28 +69,31 @@ isRunningOnCf =
     isEmpty = not . (==) "" . dropWhile isSpace
 
 current :: IO (Either String Application)
-current = do
+current = runEitherT currentT
+
+currentT :: EitherT String IO Application
+currentT = do
     home <- stringFromEnv "HOME"
     memoryLimit <- stringFromEnv "MEMORY_LIMIT"
     pwd <- stringFromEnv "PWD"
     port <- numberFromEnv "PORT"
     tmpDir <- stringFromEnv "TMPDIR"
     user <- stringFromEnv "USER"
-    vcapServices <- lookupEnv "VCAP_SERVICES"
+    services <- servicesFromEnv
 
-    let services = decodeVcapServices <$> vcapServices
     let parser =
-            vcapApplicationParser <$> (fromMaybe (Right []) services)
-                                  <*> home
-                                  <*> memoryLimit
-                                  <*> pwd
-                                  <*> port
-                                  <*> tmpDir
-                                  <*> user
+            vcapApplicationParser
+                services
+                home
+                memoryLimit
+                pwd
+                port
+                tmpDir
+                user
 
     vcapApplication <- stringFromEnv "VCAP_APPLICATION"
 
-    return $ join (decodeVcapApplication <$> parser <*> vcapApplication)
+    liftEither $ decodeVcapApplication parser vcapApplication
 
 decodeVcapApplication :: (A.Value -> AT.Parser Application) -> String -> Either String Application
 decodeVcapApplication parser =
@@ -131,18 +137,23 @@ decodeVcapServices =
   where
     addErrorPrefix = mapLeft ("VCAP_SERVICES " ++)
 
-stringFromEnv :: String -> IO (Either String String)
+servicesFromEnv :: EitherT String IO [Service]
+servicesFromEnv = do
+    vcapServices <- liftIO $ lookupEnv "VCAP_SERVICES"
+
+    liftEither $ fromMaybe (Right []) $ decodeVcapServices <$> vcapServices
+
+stringFromEnv :: String -> EitherT String IO String
 stringFromEnv envName =
-    lookupEnv envName >>= return . maybeToEither (envName ++ " is not set.")
+    (liftIO $ lookupEnv envName) >>= liftEither . maybeToEither (envName ++ " is not set.")
 
-numberFromEnv :: String -> IO (Either String Int)
+numberFromEnv :: String -> EitherT String IO Int
 numberFromEnv envName =
-    stringFromEnv envName >>= return . (>>= toNumber)
+    stringFromEnv envName >>= liftEither . toNumber
   where
-    toNumber = numberOrError (\v -> envName ++ " must be an integer, got '" ++ v ++ "'.")
-
-numberOrError :: (String -> String) -> String -> Either String Int
-numberOrError error value = maybeToEither (error value) (readMaybe value)
+    toNumber = readEither errorMessage
+    readEither error value = maybeToEither (error value) (readMaybe value)
+    errorMessage value = envName ++ " must be an integer, got '" ++ value ++ "'."
 
 maybeToEither :: e -> Maybe v -> Either e v
 maybeToEither error =

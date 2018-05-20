@@ -24,7 +24,9 @@ library:
   - aeson
   - bytestring
   - lens
+  - mtl
   - text
+  - transformers-either
 
 tests:
   cfenv-test:
