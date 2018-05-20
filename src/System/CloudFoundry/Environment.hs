@@ -65,7 +65,7 @@ isRunningOnCf :: IO Bool
 isRunningOnCf =
     envHasValue "VCAP_APPLICATION"
   where
-    envHasValue = lookupEnv >=> return . fromMaybe False . fmap isEmpty
+    envHasValue = lookupEnv >=> return . maybe False isEmpty
     isEmpty = not . (==) "" . dropWhile isSpace
 
 current :: IO (Either String Application)
@@ -94,6 +94,24 @@ currentT = do
     vcapApplication <- stringFromEnv "VCAP_APPLICATION"
 
     liftEither $ decodeVcapApplication parser vcapApplication
+
+servicesFromEnv :: EitherT String IO [Service]
+servicesFromEnv =
+    liftEither . maybe (Right []) decodeVcapServices =<< lookupEnv' "VCAP_SERVICES"
+
+stringFromEnv :: String -> EitherT String IO String
+stringFromEnv envName =
+    liftEither . maybeToEither (envName ++ " is not set.") =<< lookupEnv' envName
+
+numberFromEnv :: String -> EitherT String IO Int
+numberFromEnv envName =
+    liftEither . readEither errorMessage =<< stringFromEnv envName
+  where
+    readEither error value = maybeToEither (errorMessage value) (readMaybe value)
+    errorMessage value = envName ++ " must be an integer, got '" ++ value ++ "'."
+
+lookupEnv' :: String -> EitherT String IO (Maybe String)
+lookupEnv' = liftIO . lookupEnv
 
 decodeVcapApplication :: (A.Value -> AT.Parser Application) -> String -> Either String Application
 decodeVcapApplication parser =
@@ -136,24 +154,6 @@ decodeVcapServices =
     addErrorPrefix . A.eitherDecode . BL.pack
   where
     addErrorPrefix = mapLeft ("VCAP_SERVICES " ++)
-
-servicesFromEnv :: EitherT String IO [Service]
-servicesFromEnv =
-    liftEither . fromMaybe (Right []) . fmap decodeVcapServices =<< lookupEnv' "VCAP_SERVICES"
-
-stringFromEnv :: String -> EitherT String IO String
-stringFromEnv envName =
-    liftEither . maybeToEither (envName ++ " is not set.") =<< lookupEnv' envName
-
-numberFromEnv :: String -> EitherT String IO Int
-numberFromEnv envName =
-    liftEither . readEither errorMessage =<< stringFromEnv envName
-  where
-    readEither error value = maybeToEither (errorMessage value) (readMaybe value)
-    errorMessage value = envName ++ " must be an integer, got '" ++ value ++ "'."
-
-lookupEnv' :: String -> EitherT String IO (Maybe String)
-lookupEnv' = liftIO . lookupEnv
 
 maybeToEither :: e -> Maybe v -> Either e v
 maybeToEither error =
