@@ -186,7 +186,7 @@ spec = do
                 CfEnv.credentialString "unknown" service `shouldBe` Nothing
             it "returns the string if it is found" $ do
                 CfEnv.credentialString "the-key" service `shouldBe` Just "the-value"
-        describe "withTag" $ do
+        context "for Service searching functions" $ do
             let serviceA =
                     CfEnv.Service
                         { CfEnv.name = "name-a"
@@ -215,7 +215,8 @@ spec = do
                             [ ("relational-db", [serviceA, serviceB])
                             , ("message-queue" , [serviceC])
                             ]
-            it "returns an empty list if no matching services are found" $ do
-                CfEnv.withTag "bad_tag" services `shouldBe` []
-            it "returns the services with matching tags" $ do
-                CfEnv.withTag "good_tag" services `shouldBe` [serviceC , serviceA]
+            describe "withTag" $ do
+                it "returns an empty list if no matching services are found" $ do
+                    CfEnv.withTag "bad_tag" services `shouldBe` []
+                it "returns the services with matching tags" $ do
+                    CfEnv.withTag "good_tag" services `shouldBe` [serviceC , serviceA]
