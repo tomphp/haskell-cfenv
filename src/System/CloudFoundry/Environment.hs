@@ -10,6 +10,7 @@ module System.CloudFoundry.Environment
     , credentialString
     , current
     , isRunningOnCf
+    , withLabel
     , withName
     , withTag
     ) where
@@ -85,11 +86,15 @@ credentialString key = Map.lookup key . credentials
 
 -- | Get all services which have the provided tag.
 withTag :: String -> Services -> [Service]
-withTag tag = filter (elem tag . tags) . allServices
+withTag searchTag = filter (elem searchTag . tags) . allServices
 
 -- | Get the service by name.
 withName :: String -> Services -> Maybe Service
 withName searchName = listToMaybe . filter ((== searchName) . name) . allServices
+
+-- | Get the services by label.
+withLabel :: String -> Services -> [Service]
+withLabel searchLabel = fromMaybe [] . Map.lookup searchLabel
 
 allServices :: Services -> [Service]
 allServices = join . Map.elems

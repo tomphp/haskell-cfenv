@@ -17,7 +17,9 @@ Cloud Foundry environment variable primitives.
 - [x] Read basic values from `VCAP_APPLICATION` into `Application`
 - [x] Read application URIs into `Application`
 - [x] Read limits into `Application`
-- [ ] Read `VCAP_SERVICES`
+- [x] Read `VCAP_SERVICES`
+- [ ] Find services by pattern matching
+- [ ] Cases from go-cfenv around handling missing data
 
 ## Usage
 

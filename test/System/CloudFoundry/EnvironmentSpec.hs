@@ -225,3 +225,8 @@ spec = do
                     CfEnv.withName "unknown" services `shouldBe` Nothing
                 it "returns the service if it exists" $ do
                     CfEnv.withName "name-b" services `shouldBe` Just serviceB
+            describe "withLabel" $ do
+                it "returns an empty list if there is no service with the given label" $ do
+                    CfEnv.withLabel "unknown" services `shouldBe` []
+                it "returns the services with that labe" $ do
+                    CfEnv.withLabel "relational-db" services `shouldBe` [serviceA, serviceB]
