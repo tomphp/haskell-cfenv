@@ -174,3 +174,22 @@ spec = do
                                           }
                                 }
                     app `shouldBe` Right expected
+        describe "credentialString" $ do
+            it "returns nothing if there is no matching string" $ do
+                let service = CfEnv.Service
+                        { CfEnv.name = "service_name"
+                        , CfEnv.label = "service_label"
+                        , CfEnv.tags = ["tag_a"]
+                        , CfEnv.plan = "service_plan"
+                        , CfEnv.credentials = Map.empty
+                        }
+                CfEnv.credentialString "unknown" service `shouldBe` Nothing
+            it "returns the string if it is found" $ do
+                let service = CfEnv.Service
+                        { CfEnv.name = "service_name"
+                        , CfEnv.label = "service_label"
+                        , CfEnv.tags = ["tag_a"]
+                        , CfEnv.plan = "service_plan"
+                        , CfEnv.credentials = Map.singleton "the-key" "the-value"
+                        }
+                CfEnv.credentialString "the-key" service `shouldBe` Just "the-value"

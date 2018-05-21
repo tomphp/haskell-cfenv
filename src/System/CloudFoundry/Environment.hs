@@ -7,6 +7,7 @@ module System.CloudFoundry.Environment
     ( Application(..)
     , Limits(..)
     , Service(..)
+    , credentialString
     , current
     , isRunningOnCf
     ) where
@@ -75,6 +76,10 @@ isRunningOnCf =
 -- | Get the current Cloud Foundry environment.
 current :: IO (Either String Application)
 current = runEitherT currentT
+
+-- | Get a credential string from a service.
+credentialString :: String -> Service -> Maybe String
+credentialString key = Map.lookup key . credentials
 
 currentT :: EitherT String IO Application
 currentT = do
