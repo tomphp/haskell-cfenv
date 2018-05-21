@@ -10,6 +10,7 @@ module System.CloudFoundry.Environment
     , credentialString
     , current
     , isRunningOnCf
+    , withTag
     ) where
 
 import           Control.Monad              (join, (>=>))
@@ -80,6 +81,13 @@ current = runEitherT currentT
 -- | Get a credential string from a service.
 credentialString :: String -> Service -> Maybe String
 credentialString key = Map.lookup key . credentials
+
+-- | Get all services which have the provided tag.
+withTag :: String -> Services -> [Service]
+withTag tag = filter (elem tag . tags) . allServices
+
+allServices :: Services -> [Service]
+allServices = join . Map.elems
 
 currentT :: EitherT String IO Application
 currentT = do

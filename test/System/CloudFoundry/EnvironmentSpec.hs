@@ -175,21 +175,47 @@ spec = do
                                 }
                     app `shouldBe` Right expected
         describe "credentialString" $ do
+            let service = CfEnv.Service
+                    { CfEnv.name = "service_name"
+                    , CfEnv.label = "service_label"
+                    , CfEnv.tags = ["tag_a"]
+                    , CfEnv.plan = "service_plan"
+                    , CfEnv.credentials = Map.singleton "the-key" "the-value"
+                    }
             it "returns nothing if there is no matching string" $ do
-                let service = CfEnv.Service
-                        { CfEnv.name = "service_name"
-                        , CfEnv.label = "service_label"
-                        , CfEnv.tags = ["tag_a"]
-                        , CfEnv.plan = "service_plan"
-                        , CfEnv.credentials = Map.empty
-                        }
                 CfEnv.credentialString "unknown" service `shouldBe` Nothing
             it "returns the string if it is found" $ do
-                let service = CfEnv.Service
-                        { CfEnv.name = "service_name"
-                        , CfEnv.label = "service_label"
-                        , CfEnv.tags = ["tag_a"]
-                        , CfEnv.plan = "service_plan"
-                        , CfEnv.credentials = Map.singleton "the-key" "the-value"
-                        }
                 CfEnv.credentialString "the-key" service `shouldBe` Just "the-value"
+        describe "withTag" $ do
+            let serviceA =
+                    CfEnv.Service
+                        { CfEnv.name = "name-a"
+                        , CfEnv.label = "label-a"
+                        , CfEnv.tags = ["good_tag", "ignore_tag"]
+                        , CfEnv.plan = "plan-a"
+                        , CfEnv.credentials = Map.empty
+                        }
+            let serviceB =
+                    CfEnv.Service
+                        { CfEnv.name = "name-b"
+                        , CfEnv.label = "label-b"
+                        , CfEnv.tags = ["ignore_tag"]
+                        , CfEnv.plan = "plan-b"
+                        , CfEnv.credentials = Map.empty
+                        }
+            let serviceC =
+                    CfEnv.Service
+                        { CfEnv.name = "name-c"
+                        , CfEnv.label = "label-c"
+                        , CfEnv.tags = ["good_tag"]
+                        , CfEnv.plan = "plan-c"
+                        , CfEnv.credentials = Map.empty
+                        }
+            let services = Map.fromList
+                            [ ("relational-db", [serviceA, serviceB])
+                            , ("message-queue" , [serviceC])
+                            ]
+            it "returns an empty list if no matching services are found" $ do
+                CfEnv.withTag "bad_tag" services `shouldBe` []
+            it "returns the services with matching tags" $ do
+                CfEnv.withTag "good_tag" services `shouldBe` [serviceC , serviceA]
