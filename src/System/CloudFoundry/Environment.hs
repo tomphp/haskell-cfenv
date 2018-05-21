@@ -10,13 +10,14 @@ module System.CloudFoundry.Environment
     , credentialString
     , current
     , isRunningOnCf
+    , withName
     , withTag
     ) where
 
 import           Control.Monad              (join, (>=>))
 import           Control.Monad.IO.Class     (liftIO)
 import           Data.Char                  (isSpace)
-import           Data.Maybe                 (fromMaybe)
+import           Data.Maybe                 (fromMaybe, listToMaybe)
 import qualified Data.Map.Strict         as Map
 import           GHC.Generics
 import           System.Environment         (lookupEnv)
@@ -85,6 +86,10 @@ credentialString key = Map.lookup key . credentials
 -- | Get all services which have the provided tag.
 withTag :: String -> Services -> [Service]
 withTag tag = filter (elem tag . tags) . allServices
+
+-- | Get the service by name.
+withName :: String -> Services -> Maybe Service
+withName searchName = listToMaybe . filter ((== searchName) . name) . allServices
 
 allServices :: Services -> [Service]
 allServices = join . Map.elems

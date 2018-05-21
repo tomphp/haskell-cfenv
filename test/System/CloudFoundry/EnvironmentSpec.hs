@@ -220,3 +220,8 @@ spec = do
                     CfEnv.withTag "bad_tag" services `shouldBe` []
                 it "returns the services with matching tags" $ do
                     CfEnv.withTag "good_tag" services `shouldBe` [serviceC , serviceA]
+            describe "withName" $ do
+                it "returns nothing if there is no service with the given name" $ do
+                    CfEnv.withName "unknown" services `shouldBe` Nothing
+                it "returns the service if it exists" $ do
+                    CfEnv.withName "name-b" services `shouldBe` Just serviceB
