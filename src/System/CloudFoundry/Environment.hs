@@ -1,7 +1,4 @@
-{-# LANGUAGE DeriveGeneric     #-}
-{-# LANGUAGE LambdaCase        #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecordWildCards   #-}
+{-# LANGUAGE LambdaCase, OverloadedStrings #-}
 
 module System.CloudFoundry.Environment
     ( Application(..)
@@ -15,58 +12,26 @@ module System.CloudFoundry.Environment
     , withTag
     ) where
 
-import           Control.Monad              (join, (>=>))
+import           Control.Monad              ((>=>))
 import           Control.Monad.IO.Class     (liftIO)
 import           Data.Char                  (isSpace)
-import           Data.Maybe                 (fromMaybe, listToMaybe)
 import qualified Data.Map.Strict         as Map
-import           GHC.Generics
 import           System.Environment         (lookupEnv)
 import           Text.Read                  (readMaybe)
 
 import           Control.Monad.Except       (liftEither)
 import           Control.Monad.Trans.Either (EitherT, runEitherT)
-import           Data.Aeson                 (FromJSON, (.:))
-import qualified Data.Aeson                 as A
-import qualified Data.Aeson.Types           as AT
-import qualified Data.ByteString.Lazy.Char8 as BL
 
-data Application = Application
-    { appId           :: String
-    , applicationUris :: [String]
-    , cfApi           :: String
-    , home            :: String
-    , host            :: String
-    , instanceId      :: String
-    , index           :: Int
-    , limits          :: Limits
-    , memoryLimit     :: String
-    , appName         :: String
-    , pwd             :: String
-    , port            :: Int
-    , services        :: Services
-    , spaceId         :: String
-    , spaceName       :: String
-    , tmpDir          :: String
-    , user            :: String
-    , version         :: String
-    } deriving (Eq, Show)
-
-data Limits = Limits
-    { disk :: Int
-    , fds  :: Int
-    , mem  :: Int
-    } deriving (Eq, Show, Generic)
-
-data Service = Service
-    { name  :: String
-    , label :: String
-    , tags  :: [String]
-    , plan  :: String
-    , credentials :: Map.Map String String
-    } deriving (Eq, Show, Generic)
-
-type Services = Map.Map String [Service]
+import System.CloudFoundry.Environment.Application (Application(..), Limits(..))
+import qualified System.CloudFoundry.Environment.Decoder as Decoder
+import System.CloudFoundry.Environment.Service
+    ( Service(..)
+    , Services
+    , credentialString
+    , withLabel
+    , withName
+    , withTag
+    )
 
 -- | Detect if the application is running as a Cloud Foundry application.
 isRunningOnCf :: IO Bool
@@ -80,25 +45,6 @@ isRunningOnCf =
 current :: IO (Either String Application)
 current = runEitherT currentT
 
--- | Get a credential string from a service.
-credentialString :: String -> Service -> Maybe String
-credentialString key = Map.lookup key . credentials
-
--- | Get all services which have the provided tag.
-withTag :: String -> Services -> [Service]
-withTag searchTag = filter (elem searchTag . tags) . allServices
-
--- | Get the service by name.
-withName :: String -> Services -> Maybe Service
-withName searchName = listToMaybe . filter ((== searchName) . name) . allServices
-
--- | Get the services by label.
-withLabel :: String -> Services -> [Service]
-withLabel searchLabel = fromMaybe [] . Map.lookup searchLabel
-
-allServices :: Services -> [Service]
-allServices = join . Map.elems
-
 currentT :: EitherT String IO Application
 currentT = do
     home <- stringFromEnv "HOME"
@@ -110,7 +56,7 @@ currentT = do
     services <- servicesFromEnv
 
     let parser =
-            vcapApplicationParser
+            Decoder.vcapApplicationParser
                 services
                 home
                 memoryLimit
@@ -121,11 +67,11 @@ currentT = do
 
     vcapApplication <- stringFromEnv "VCAP_APPLICATION"
 
-    liftEither $ decodeVcapApplication parser vcapApplication
+    liftEither $ Decoder.decodeVcapApplication parser vcapApplication
 
 servicesFromEnv :: EitherT String IO Services
 servicesFromEnv =
-    liftEither . maybe (Right Map.empty) decodeVcapServices =<< lookupEnv' "VCAP_SERVICES"
+    liftEither . maybe (Right Map.empty) Decoder.decodeVcapServices =<< lookupEnv' "VCAP_SERVICES"
 
 stringFromEnv :: String -> EitherT String IO String
 stringFromEnv envName =
@@ -141,54 +87,9 @@ numberFromEnv envName =
 lookupEnv' :: String -> EitherT String IO (Maybe String)
 lookupEnv' = liftIO . lookupEnv
 
-decodeVcapApplication :: (A.Value -> AT.Parser Application) -> String -> Either String Application
-decodeVcapApplication parser =
-    addErrorPrefix . parseJson
-  where
-    parseJson = (A.eitherDecode . BL.pack) >=> AT.parseEither parser
-    addErrorPrefix = mapLeft ("VCAP_APPLICATION " ++)
-
-vcapApplicationParser ::
-       Services
-    -> String
-    -> String
-    -> String
-    -> Int
-    -> String
-    -> String
-    -> A.Value
-    -> AT.Parser Application
-vcapApplicationParser services home memoryLimit pwd port tmpDir user =
-    A.withObject "Application" $ \o -> do
-        appId <- o .: "application_id"
-        applicationUris <- o .: "application_uris"
-        cfApi <- o .: "cf_api"
-        host <- o .: "host"
-        instanceId <- o .: "instance_id"
-        index <- o .: "instance_index"
-        limits <- o .: "limits"
-        appName <- o .: "name"
-        spaceId <- o .: "space_id"
-        spaceName <- o .: "space_name"
-        version <- o .: "version"
-        return Application {..}
-
-instance FromJSON Limits
-
-instance FromJSON Service
-
-decodeVcapServices :: String -> Either String Services
-decodeVcapServices =
-    addErrorPrefix . A.eitherDecode . BL.pack
-  where
-    addErrorPrefix = mapLeft ("VCAP_SERVICES " ++)
-
 maybeToEither :: e -> Maybe v -> Either e v
 maybeToEither error =
     \case
         Just value -> Right value
         Nothing -> Left error
 
-mapLeft :: (e -> e1) -> Either e a -> Either e1 a
-mapLeft f (Left error)  = Left $ f error
-mapLeft _ (Right value) = Right value
