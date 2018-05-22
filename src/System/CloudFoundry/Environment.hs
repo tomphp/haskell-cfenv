@@ -47,31 +47,36 @@ current = runEitherT currentT
 
 currentT :: EitherT String IO Application
 currentT = do
-  home <- stringFromEnv "HOME"
-  memoryLimit <- stringFromEnv "MEMORY_LIMIT"
-  pwd <- stringFromEnv "PWD"
-  port <- numberFromEnv "PORT"
-  tmpDir <- stringFromEnv "TMPDIR"
-  user <- stringFromEnv "USER"
-  services <- servicesFromEnv
+    home <- stringFromEnv "HOME"
+    memoryLimit <- stringFromEnv "MEMORY_LIMIT"
+    pwd <- stringFromEnv "PWD"
+    port <- numberFromEnv "PORT"
+    tmpDir <- stringFromEnv "TMPDIR"
+    user <- stringFromEnv "USER"
+    services <- servicesFromEnv
 
-  let parser =
-        Decoder.vcapApplicationParser
-          services
-          home
-          memoryLimit
-          pwd
-          port
-          tmpDir
-          user
+    let parser =
+          Decoder.vcapApplicationParser
+            services
+            home
+            memoryLimit
+            pwd
+            port
+            tmpDir
+            user
 
-  vcapApplication <- stringFromEnv "VCAP_APPLICATION"
+    vcapApplication <- stringFromEnv "VCAP_APPLICATION"
 
-  liftEither $ Decoder.decodeVcapApplication parser vcapApplication
+    liftEither $ addErrorPrefix $ Decoder.decodeVcapApplication parser vcapApplication
+   where
+     addErrorPrefix = mapLeft ("VCAP_APPLICATION " ++)
 
 servicesFromEnv :: EitherT String IO Services
 servicesFromEnv =
-  liftEither . maybe (Right Map.empty) Decoder.decodeVcapServices =<< lookupEnv' "VCAP_SERVICES"
+    liftEither . addErrorPrefix . decode =<< lookupEnv' "VCAP_SERVICES"
+  where
+    decode = maybe (Right Map.empty) Decoder.decodeVcapServices
+    addErrorPrefix = mapLeft ("VCAP_SERVICES " ++)
 
 stringFromEnv :: String -> EitherT String IO String
 stringFromEnv envName =
@@ -93,3 +98,6 @@ maybeToEither error =
     Just value -> Right value
     Nothing -> Left error
 
+mapLeft :: (e -> e1) -> Either e a -> Either e1 a
+mapLeft f (Left error)  = Left $ f error
+mapLeft _ (Right value) = Right value

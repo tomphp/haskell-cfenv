@@ -18,10 +18,7 @@ import System.CloudFoundry.Environment.Service
 
 decodeVcapApplication :: (A.Value -> AT.Parser Application) -> String -> Either String Application
 decodeVcapApplication parser =
-    addErrorPrefix . parseJson
-  where
-    parseJson = (A.eitherDecode . BL.pack) >=> AT.parseEither parser
-    addErrorPrefix = mapLeft ("VCAP_APPLICATION " ++)
+  (A.eitherDecode . BL.pack) >=> AT.parseEither parser
 
 vcapApplicationParser :: Services
                       -> String
@@ -52,11 +49,4 @@ instance FromJSON Limits
 instance FromJSON Service
 
 decodeVcapServices :: String -> Either String Services
-decodeVcapServices =
-    addErrorPrefix . A.eitherDecode . BL.pack
-  where
-    addErrorPrefix = mapLeft ("VCAP_SERVICES " ++)
-
-mapLeft :: (e -> e1) -> Either e a -> Either e1 a
-mapLeft f (Left error)  = Left $ f error
-mapLeft _ (Right value) = Right value
+decodeVcapServices = A.eitherDecode . BL.pack

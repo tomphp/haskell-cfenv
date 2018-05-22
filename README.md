@@ -28,18 +28,18 @@ Cloud Foundry environment variable primitives.
 
 import Data.String (fromString)
 import Data.Monoid (mconcat)
-import System.Environment (lookupEnv)
 
 import Web.Scotty
 
 import qualified System.CloudFoundry.Environment as CfEnv
+import qualified System.CloudFoundry.Environment.Application as App
 
 main = do
   cfenv <- CfEnv.current
   
   case cfenv of
     Right app ->
-      scotty (CfEnv.port app) $
+      scotty (App.port app) $
         get "/" $ do
           html $ mconcat ["<pre>", (fromString (show app)), "</pre>"]
           
