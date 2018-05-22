@@ -1,14 +1,14 @@
 {-# LANGUAGE DeriveGeneric, OverloadedStrings #-}
 
 module System.CloudFoundry.Environment.Service
-    ( Service(..)
-    , Services
-    , credentialString
-    , withTag
-    , withLabel
-    , withName
-    )
-    where
+  ( Service(..)
+  , Services
+  , credentialString
+  , withTag
+  , withLabel
+  , withName
+  )
+  where
 
 import Control.Monad (join)
 import Data.Maybe (fromMaybe, listToMaybe)
@@ -17,12 +17,12 @@ import GHC.Generics
 import qualified Data.Map.Strict as Map
 
 data Service = Service
-    { name  :: String
-    , label :: String
-    , tags  :: [String]
-    , plan  :: String
-    , credentials :: Map String String
-    } deriving (Eq, Show, Generic)
+  { name  :: String
+  , label :: String
+  , tags  :: [String]
+  , plan  :: String
+  , credentials :: Map String String
+  } deriving (Eq, Show, Generic)
 
 type Services = Map String [Service]
 
