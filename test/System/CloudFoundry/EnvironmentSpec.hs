@@ -148,30 +148,30 @@ spec = do
                   , CfEnv.tmpDir = "/tmpdir"
                   , CfEnv.services =
                       Map.fromList
-                          [ ("cleardb",
-                              [ CfEnv.Service
-                                  { CfEnv.name = "service_name"
-                                  , CfEnv.label = "service_label"
-                                  , CfEnv.tags = ["tag_a"]
-                                  , CfEnv.plan = "service_plan"
-                                  , CfEnv.credentials =
-                                      Map.fromList [ ("username", "service_username")
-                                                   , ("password", "service_password")
-                                                   ]
-                                  }
-                              ]
-                            )
-                          ]
+                        [ ("cleardb",
+                            [ CfEnv.Service
+                                { CfEnv.name = "service_name"
+                                , CfEnv.label = "service_label"
+                                , CfEnv.tags = ["tag_a"]
+                                , CfEnv.plan = "service_plan"
+                                , CfEnv.credentials =
+                                    Map.fromList [ ("username", "service_username")
+                                                 , ("password", "service_password")
+                                                 ]
+                                }
+                            ]
+                          )
+                        ]
                   , CfEnv.spaceId = "abc_space_id"
                   , CfEnv.spaceName = "development"
                   , CfEnv.user = "tom"
                   , CfEnv.version = "xxx_version"
                   , CfEnv.limits =
                       CfEnv.Limits
-                          { CfEnv.disk = 1024
-                          , CfEnv.fds = 16384
-                          , CfEnv.mem = 2048
-                          }
+                        { CfEnv.disk = 1024
+                        , CfEnv.fds = 16384
+                        , CfEnv.mem = 2048
+                        }
                   }
           app `shouldBe` Right expected
     describe "credentialString" $ do
