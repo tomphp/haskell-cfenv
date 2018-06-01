@@ -81,17 +81,17 @@ currentT = do
 
 vcapAppFromEnv :: EitherT String IO VcapApp.VcapApplication
 vcapAppFromEnv =
-  let
+    EV.stringFromEnv name >>= liftEither . decode
+  where
+    decode = addErrorPrefix name . VcapApp.decode
     name = "VCAP_APPLICATION"
-  in
-    EV.stringFromEnv name >>= liftEither . addErrorPrefix name . VcapApp.decode
 
 vcapServicesFromEnv :: EitherT String IO Services
 vcapServicesFromEnv =
-  let
+    EV.stringFromEnvWithDefault "{}" name >>= liftEither . decode
+  where
     name = "VCAP_SERVICES"
-  in
-    EV.stringFromEnvWithDefault "{}" name >>= liftEither . addErrorPrefix name . VcapServices.decode
+    decode = addErrorPrefix name . VcapServices.decode
 
 mkApplication :: EV.EnvVars -> VcapApp.VcapApplication -> Services  -> Application
 mkApplication envVars vcapApp services =
