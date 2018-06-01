@@ -22,9 +22,8 @@ library:
   source-dirs: src/
   exposed-modules:
   - System.CloudFoundry.Environment
-  - System.CloudFoundry.Environment.Application
-  - System.CloudFoundry.Environment.Decoder
-  - System.CloudFoundry.Environment.Service
+
+  - System.CloudFoundry.Environment.Internal.EnvVars
   dependencies:
   - bytestring
   - lens
