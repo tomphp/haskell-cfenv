@@ -14,8 +14,8 @@ import Data.Maybe (fromMaybe)
 import Data.Either (fromRight)
 import System.Environment (getEnv, lookupEnv)
 
+import Control.Error
 import Control.Monad.Except (liftEither)
-import Control.Monad.Trans.Either (EitherT, newEitherT)
 import Text.Read (readMaybe)
 
 data EnvVars = EnvVars
@@ -28,27 +28,27 @@ data EnvVars = EnvVars
   }
 
 -- TODO: Test me!!!
-getEnvVars :: EitherT String IO EnvVars
+getEnvVars :: ExceptT String IO EnvVars
 getEnvVars = do
-    home <- stringFromEnv "HOME"
-    memoryLimit <- stringFromEnv "MEMORY_LIMIT"
-    pwd <- stringFromEnv "PWD"
-    port <- numberFromEnv "PORT"
-    tmpDir <- stringFromEnv "TMPDIR"
-    user <- stringFromEnv "USER"
-    return EnvVars{..}
+  home <- stringFromEnv "HOME"
+  memoryLimit <- stringFromEnv "MEMORY_LIMIT"
+  pwd <- stringFromEnv "PWD"
+  port <- numberFromEnv "PORT"
+  tmpDir <- stringFromEnv "TMPDIR"
+  user <- stringFromEnv "USER"
+  return EnvVars{..}
 
 -- TODO: Test me!!!
-stringFromEnv :: String -> EitherT String IO String
-stringFromEnv = newEitherT . eitherLookupEnv
+stringFromEnv :: String -> ExceptT String IO String
+stringFromEnv = ExceptT . eitherLookupEnv
 
 -- TODO: Test me!!!
-stringFromEnvWithDefault :: String -> String -> EitherT String IO String
-stringFromEnvWithDefault def = newEitherT . fmap Right . getEnvDefault "{}"
+stringFromEnvWithDefault :: String -> String -> ExceptT String IO String
+stringFromEnvWithDefault def = ExceptT . fmap Right . getEnvDefault "{}"
 
 -- TODO: Test me!!!
-numberFromEnv :: String -> EitherT String IO Int
-numberFromEnv envName = newEitherT $ fmap (>>= readEither) $ eitherLookupEnv envName
+numberFromEnv :: String -> ExceptT String IO Int
+numberFromEnv envName = ExceptT $ fmap (>>= readEither) $ eitherLookupEnv envName
   where
     readEither value = maybeToEither (errorMessage value) (readMaybe value)
     errorMessage value = envName ++ " must be an integer, got '" ++ value ++ "'."

@@ -26,10 +26,10 @@ library:
   - System.CloudFoundry.Environment.Internal.EnvVars
   dependencies:
   - bytestring
+  - errors
   - lens
   - mtl
   - text
-  - transformers-either
 
 tests:
   cfenv-test:

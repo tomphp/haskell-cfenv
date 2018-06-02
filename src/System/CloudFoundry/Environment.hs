@@ -24,8 +24,8 @@ import GHC.Generics
 import qualified Data.Map.Strict as Map
 import System.Environment (lookupEnv)
 
+import Control.Error
 import Control.Monad.Except (liftEither)
-import Control.Monad.Trans.Either (EitherT, runEitherT)
 
 import Data.Aeson (FromJSON, (.:))
 import qualified Data.Aeson as A
@@ -48,7 +48,7 @@ isRunningOnCf =
 
 -- | Get the current Cloud Foundry environment.
 current :: IO (Either String Application)
-current = runEitherT currentT
+current = runExceptT currentT
 
 -- | Get a credential string from a service.
 credentialString :: String -> Service -> Maybe String
@@ -71,7 +71,7 @@ withLabel searchLabel = fromMaybe [] . Map.lookup searchLabel
 allServices :: Services -> [Service]
 allServices = join . Map.elems
 
-currentT :: EitherT String IO Application
+currentT :: ExceptT String IO Application
 currentT = do
   envVars <- EV.getEnvVars
   vcapApp <- vcapAppFromEnv
@@ -79,14 +79,14 @@ currentT = do
 
   return $ mkApplication envVars vcapApp vcapServices
 
-vcapAppFromEnv :: EitherT String IO VcapApp.VcapApplication
+vcapAppFromEnv :: ExceptT String IO VcapApp.VcapApplication
 vcapAppFromEnv =
     EV.stringFromEnv name >>= liftEither . decode
   where
     decode = addErrorPrefix name . VcapApp.decode
     name = "VCAP_APPLICATION"
 
-vcapServicesFromEnv :: EitherT String IO Services
+vcapServicesFromEnv :: ExceptT String IO Services
 vcapServicesFromEnv =
     EV.stringFromEnvWithDefault "{}" name >>= liftEither . decode
   where
