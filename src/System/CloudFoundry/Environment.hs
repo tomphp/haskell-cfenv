@@ -22,7 +22,7 @@ import Data.Char (isSpace)
 import Data.Maybe (fromMaybe, listToMaybe)
 import GHC.Generics
 import qualified Data.Map.Strict as Map
-import System.Environment (lookupEnv)
+import System.Environment.Extended (eitherLookupEnv, lookupEnv, getEnvDefault)
 
 import Control.Error
 import Control.Monad.Except (liftEither)
@@ -81,17 +81,28 @@ currentT = do
 
 vcapAppFromEnv :: ExceptT String IO VcapApp.VcapApplication
 vcapAppFromEnv =
-    EV.stringFromEnv name >>= liftEither . decode
+    ExceptT $ getEnvVarAndDecode "VCAP_APPLICATION" decode
   where
-    decode = addErrorPrefix name . VcapApp.decode
-    name = "VCAP_APPLICATION"
+    getEnvVarAndDecode :: String -> (String -> Either String a) -> IO (Either String a)
+    getEnvVarAndDecode envName decode = fmap (>>= decode) (getEnvVar envName)
+
+    getEnvVar :: String -> IO (Either String String)
+    getEnvVar envName = eitherLookupEnv (envName ++ " is not set.") envName
+
+    decode :: String -> Either String VcapApplication
+    decode = addErrorPrefix "VCAP_APPLICATION" . VcapApp.decode
 
 vcapServicesFromEnv :: ExceptT String IO Services
 vcapServicesFromEnv =
-    EV.stringFromEnvWithDefault "{}" name >>= liftEither . decode
+    ExceptT $ getEnvAndDecode "VCAP_SERVICES" decode
   where
-    name = "VCAP_SERVICES"
-    decode = addErrorPrefix name . VcapServices.decode
+    getEnvAndDecode :: String -> (String -> Either String a) -> IO (Either String a)
+    getEnvAndDecode envName decode = fmap (>>= decode) (getEnvVar envName)
+
+    getEnvVar :: String -> IO (Either String String)
+    getEnvVar = fmap Right . getEnvDefault "{}"
+
+    decode = addErrorPrefix "VCAP_SERVICES" . VcapServices.decode
 
 mkApplication :: EV.EnvVars -> VcapApp.VcapApplication -> Services  -> Application
 mkApplication envVars vcapApp services =

@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: ab36f61354ecd48348568b1c905b0fa866f7c9f3cc26bbbedc079988a195977e
+-- hash: 7f0eedf39d6f19104c54f5e9477db706ac4407a3b4fd126037383bf76cf4d9d2
 
 name:           cfenv
 version:        0.1.0.0
@@ -45,6 +45,7 @@ library
       System.CloudFoundry.Environment.Internal.Types
       System.CloudFoundry.Environment.Internal.VcapApplicationDecoder
       System.CloudFoundry.Environment.Internal.VcapServicesDecoder
+      System.Environment.Extended
       Paths_cfenv
   default-language: Haskell2010
 
