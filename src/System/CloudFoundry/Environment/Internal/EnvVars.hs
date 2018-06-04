@@ -23,6 +23,8 @@ data EnvVars = EnvVars
   , port :: Int
   , tmpDir :: String
   , user :: String
+  , vcapApplication :: String
+  , vcapServices :: String
   }
 
 -- TODO: Test me!!!
@@ -34,6 +36,8 @@ getEnvVars = do
   port <- numberFromEnv "PORT"
   tmpDir <- stringFromEnv "TMPDIR"
   user <- stringFromEnv "USER"
+  vcapApplication <- stringFromEnv "VCAP_APPLICATION"
+  vcapServices <- liftIO $ getEnvDefault "{}" "VCAP_SERVICES"
   return EnvVars{..}
 
 -- TODO: Test me!!!

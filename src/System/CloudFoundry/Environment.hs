@@ -73,36 +73,14 @@ allServices = join . Map.elems
 
 currentT :: ExceptT String IO Application
 currentT = do
-  envVars <- EV.getEnvVars
-  vcapApp <- vcapAppFromEnv
-  vcapServices <- vcapServicesFromEnv
+    envVars <- EV.getEnvVars
+    vcapApp <- liftEither $ decodeVcapApplication (EV.vcapApplication envVars)
+    vcapServices <- liftEither $ decodeVcapServices (EV.vcapServices envVars)
 
-  return $ mkApplication envVars vcapApp vcapServices
-
-vcapAppFromEnv :: ExceptT String IO VcapApp.VcapApplication
-vcapAppFromEnv =
-    ExceptT $ getEnvVarAndDecode "VCAP_APPLICATION" decode
+    return $ mkApplication envVars vcapApp vcapServices
   where
-    getEnvVarAndDecode :: String -> (String -> Either String a) -> IO (Either String a)
-    getEnvVarAndDecode envName decode = fmap (>>= decode) (getEnvVar envName)
-
-    getEnvVar :: String -> IO (Either String String)
-    getEnvVar envName = eitherLookupEnv (envName ++ " is not set.") envName
-
-    decode :: String -> Either String VcapApplication
-    decode = addErrorPrefix "VCAP_APPLICATION" . VcapApp.decode
-
-vcapServicesFromEnv :: ExceptT String IO Services
-vcapServicesFromEnv =
-    ExceptT $ getEnvAndDecode "VCAP_SERVICES" decode
-  where
-    getEnvAndDecode :: String -> (String -> Either String a) -> IO (Either String a)
-    getEnvAndDecode envName decode = fmap (>>= decode) (getEnvVar envName)
-
-    getEnvVar :: String -> IO (Either String String)
-    getEnvVar = fmap Right . getEnvDefault "{}"
-
-    decode = addErrorPrefix "VCAP_SERVICES" . VcapServices.decode
+    decodeVcapApplication = addErrorPrefix "VCAP_APPLICATION" . VcapApp.decode
+    decodeVcapServices = addErrorPrefix "VCAP_SERVICES" . VcapServices.decode
 
 mkApplication :: EV.EnvVars -> VcapApp.VcapApplication -> Services  -> Application
 mkApplication envVars vcapApp services =

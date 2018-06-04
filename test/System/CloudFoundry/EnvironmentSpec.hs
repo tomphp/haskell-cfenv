@@ -125,6 +125,8 @@ spec = do
                 , EV.port = 9000
                 , EV.tmpDir = "/tmpdir"
                 , EV.user = "tom"
+                , EV.vcapApplication = vcapApplicationJson
+                , EV.vcapServices = vcapServicesJson
                 })
 
       it "returns error for bad JSON" $ do
@@ -303,5 +305,7 @@ applicationFromJson = do
         , EV.port = 9000
         , EV.tmpDir = "/tmpdir"
         , EV.user = "tom"
+        , EV.vcapApplication = vcapApplicationJson
+        , EV.vcapServices = vcapServicesJson
         }))
     vcapApplicationJson
