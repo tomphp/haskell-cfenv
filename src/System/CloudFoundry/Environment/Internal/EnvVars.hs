@@ -2,6 +2,7 @@
 
 module System.CloudFoundry.Environment.Internal.EnvVars
   ( EnvVars(..)
+  , EnvVarError(..)
   , getEnvVars
   ) where
 
@@ -16,6 +17,12 @@ import Control.Error.Util (note)
 import Control.Monad.Except (liftEither)
 import Text.Read (readMaybe)
 
+data EnvVarError = NotSet String | NotInteger String String
+
+instance Show EnvVarError where
+  show (NotSet envName)           = envName ++ " is not set."
+  show (NotInteger envName value) = envName ++ " must be an integer, got '" ++ value ++ "'."
+
 data EnvVars = EnvVars
   { home :: String
   , memoryLimit :: String
@@ -28,7 +35,7 @@ data EnvVars = EnvVars
   }
 
 -- TODO: Test me!!!
-getEnvVars :: ExceptT String IO EnvVars
+getEnvVars :: ExceptT EnvVarError IO EnvVars
 getEnvVars = do
   home <- stringFromEnv "HOME"
   memoryLimit <- stringFromEnv "MEMORY_LIMIT"
@@ -41,17 +48,17 @@ getEnvVars = do
   return EnvVars{..}
 
 -- TODO: Test me!!!
-stringFromEnv :: String -> ExceptT String IO String
+stringFromEnv :: String -> ExceptT EnvVarError IO String
 stringFromEnv = ExceptT . eitherLookupEnv'
 
 -- TODO: Test me!!!
-numberFromEnv :: String -> ExceptT String IO Int
+numberFromEnv :: String -> ExceptT EnvVarError IO Int
 numberFromEnv envName = ExceptT $ fmap (>>= readEither) $ eitherLookupEnv' envName
   where
     readEither value = note (errorMessage value) (readMaybe value)
-    errorMessage value = envName ++ " must be an integer, got '" ++ value ++ "'."
+    errorMessage value = NotInteger envName value
 
-eitherLookupEnv' :: String -> IO (Either String String)
+eitherLookupEnv' :: String -> IO (Either EnvVarError String)
 eitherLookupEnv' envName =
-    eitherLookupEnv (envName ++ " is not set.") envName
+    eitherLookupEnv (NotSet envName) envName
 

@@ -25,7 +25,7 @@ import qualified Data.Map.Strict as Map
 import System.Environment.Extended (eitherLookupEnv, lookupEnv, getEnvDefault)
 
 import Control.Error
-import Control.Monad.Except (liftEither)
+import Control.Monad.Except (liftEither, liftIO)
 
 import Data.Aeson (FromJSON, (.:))
 import qualified Data.Aeson as A
@@ -38,6 +38,12 @@ import System.CloudFoundry.Environment.Internal.Types
 import System.CloudFoundry.Environment.Internal.VcapApplicationDecoder as VcapApp
 import System.CloudFoundry.Environment.Internal.VcapServicesDecoder as VcapServices
 
+data CfEnvError = EnvVarError EV.EnvVarError | DecodeError String String
+
+instance Show CfEnvError where
+  show (EnvVarError error)      = show error
+  show (DecodeError name error) = name ++ " " ++ error
+
 -- | Detect if the application is running as a Cloud Foundry application.
 isRunningOnCf :: IO Bool
 isRunningOnCf =
@@ -48,7 +54,7 @@ isRunningOnCf =
 
 -- | Get the current Cloud Foundry environment.
 current :: IO (Either String Application)
-current = runExceptT currentT
+current = runExceptT $ withExceptT show currentT
 
 -- | Get a credential string from a service.
 credentialString :: String -> Service -> Maybe String
@@ -71,16 +77,17 @@ withLabel searchLabel = fromMaybe [] . Map.lookup searchLabel
 allServices :: Services -> [Service]
 allServices = join . Map.elems
 
-currentT :: ExceptT String IO Application
+currentT :: ExceptT CfEnvError IO Application
 currentT = do
-    envVars <- EV.getEnvVars
+    envVars <- getEnvVars
     vcapApp <- liftEither $ decodeVcapApplication (EV.vcapApplication envVars)
     vcapServices <- liftEither $ decodeVcapServices (EV.vcapServices envVars)
 
     return $ mkApplication envVars vcapApp vcapServices
   where
-    decodeVcapApplication = addErrorPrefix "VCAP_APPLICATION" . VcapApp.decode
-    decodeVcapServices = addErrorPrefix "VCAP_SERVICES" . VcapServices.decode
+    getEnvVars = withExceptT EnvVarError EV.getEnvVars
+    decodeVcapApplication = mapLeft (DecodeError "VCAP_APPLICATION") . VcapApp.decode
+    decodeVcapServices = mapLeft (DecodeError "VCAP_SERVICES") . VcapServices.decode
 
 mkApplication :: EV.EnvVars -> VcapApp.VcapApplication -> Services  -> Application
 mkApplication envVars vcapApp services =
@@ -104,9 +111,6 @@ mkApplication envVars vcapApp services =
       , user = EV.user envVars
       , version = VcapApp.version vcapApp
       }
-
-addErrorPrefix :: String -> Either String a -> Either String a
-addErrorPrefix prefix = mapLeft ((prefix ++ " ") ++)
 
 mapLeft :: (e -> e1) -> Either e a -> Either e1 a
 mapLeft f (Left error)  = Left $ f error
