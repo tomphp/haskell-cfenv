@@ -35,7 +35,7 @@ import qualified Data.ByteString.Lazy.Char8 as BL
 import qualified System.CloudFoundry.Environment.Internal.EnvVars as EV
 import System.CloudFoundry.Environment.Internal.EnvVars (EnvVars(EnvVars))
 import System.CloudFoundry.Environment.Internal.Types
-import System.CloudFoundry.Environment.Internal.VcapApplicationDecoder as VcapApp
+import System.CloudFoundry.Environment.Internal.VcapApplicationDecoder as VcapApplication
 import System.CloudFoundry.Environment.Internal.VcapServicesDecoder as VcapServices
 
 data CfEnvError = EnvVarError EV.EnvVarError | DecodeError String String
@@ -86,30 +86,30 @@ currentT = do
     return $ mkApplication envVars vcapApp vcapServices
   where
     getEnvVars = withExceptT EnvVarError EV.getEnvVars
-    decodeVcapApplication = mapLeft (DecodeError "VCAP_APPLICATION") . VcapApp.decode
+    decodeVcapApplication = mapLeft (DecodeError "VCAP_APPLICATION") . VcapApplication.decode
     decodeVcapServices = mapLeft (DecodeError "VCAP_SERVICES") . VcapServices.decode
 
-mkApplication :: EV.EnvVars -> VcapApp.VcapApplication -> Services  -> Application
+mkApplication :: EV.EnvVars -> VcapApplication.VcapApplication -> Services  -> Application
 mkApplication envVars vcapApp services =
     Application
-      { appId = VcapApp.appId vcapApp
-      , appName = VcapApp.appName vcapApp
-      , applicationUris = VcapApp.applicationUris vcapApp
-      , cfApi = VcapApp.cfApi vcapApp
+      { appId = VcapApplication.appId vcapApp
+      , appName = VcapApplication.appName vcapApp
+      , applicationUris = VcapApplication.applicationUris vcapApp
+      , cfApi = VcapApplication.cfApi vcapApp
       , home = EV.home envVars
-      , host = VcapApp.host vcapApp
-      , index = VcapApp.index vcapApp
-      , instanceId = VcapApp.instanceId vcapApp
-      , limits = VcapApp.limits vcapApp
+      , host = VcapApplication.host vcapApp
+      , index = VcapApplication.index vcapApp
+      , instanceId = VcapApplication.instanceId vcapApp
+      , limits = VcapApplication.limits vcapApp
       , memoryLimit = EV.memoryLimit envVars
       , port = EV.port envVars
       , pwd = EV.pwd envVars
       , services = services
-      , spaceId = VcapApp.spaceId vcapApp
-      , spaceName = VcapApp.spaceName vcapApp
+      , spaceId = VcapApplication.spaceId vcapApp
+      , spaceName = VcapApplication.spaceName vcapApp
       , tmpDir = EV.tmpDir envVars
       , user = EV.user envVars
-      , version = VcapApp.version vcapApp
+      , version = VcapApplication.version vcapApp
       }
 
 mapLeft :: (e -> e1) -> Either e a -> Either e1 a
