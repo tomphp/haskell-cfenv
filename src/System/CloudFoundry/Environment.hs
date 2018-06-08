@@ -2,6 +2,7 @@
 
 module System.CloudFoundry.Environment
   ( Application(..)
+  , EnvVars(EnvVars)
   , Limits(..)
   , Service(..)
   , credentialString
@@ -10,11 +11,6 @@ module System.CloudFoundry.Environment
   , withLabel
   , withName
   , withTag
-
-  , decodeVcapServices
-  , decodeVcapApplication
-  , vcapApplicationParser
-  , EnvVars(EnvVars)
   ) where
 
 import Control.Monad ((>=>), join)
@@ -115,39 +111,3 @@ mkApplication envVars vcapApp services =
 mapLeft :: (e -> e1) -> Either e a -> Either e1 a
 mapLeft f (Left error)  = Left $ f error
 mapLeft _ (Right value) = Right value
-
--- TODO: Kill below
-
-decodeVcapApplication :: (A.Value -> AT.Parser Application) -> String -> Either String Application
-decodeVcapApplication parser =
-  eitherDecodeString >=> AT.parseEither parser
-
-vcapApplicationParser :: Services -> EV.EnvVars -> A.Value -> AT.Parser Application
-vcapApplicationParser services envVars =
-  A.withObject "Application" $ \o -> do
-    appId <- o .: "application_id"
-    applicationUris <- o .: "application_uris"
-    cfApi <- o .: "cf_api"
-    host <- o .: "host"
-    instanceId <- o .: "instance_id"
-    index <- o .: "instance_index"
-    limits <- o .: "limits"
-    appName <- o .: "name"
-    spaceId <- o .: "space_id"
-    spaceName <- o .: "space_name"
-    version <- o .: "version"
-
-    let home = EV.home envVars
-    let memoryLimit = EV.memoryLimit envVars
-    let pwd = EV.pwd envVars
-    let port = EV.port envVars
-    let tmpDir = EV.tmpDir envVars
-    let user = EV.user envVars
-
-    return Application {..}
-
-decodeVcapServices :: String -> Either String Services
-decodeVcapServices = eitherDecodeString
-
-eitherDecodeString :: (FromJSON a) => String -> Either String a
-eitherDecodeString = A.eitherDecode . BL.pack

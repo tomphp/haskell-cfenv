@@ -11,8 +11,6 @@ import Text.RawString.QQ
 
 import qualified System.CloudFoundry.Environment as CfEnv
 
-import qualified System.CloudFoundry.Environment.Internal.EnvVars as EV
-
 spec :: Spec
 spec = do
   describe "isRunningOnCf" $ do
@@ -95,48 +93,24 @@ spec = do
 
       it "returns Application when the environment is correct" $ do
         app <- CfEnv.current
-        app `shouldBe` applicationFromJson
 
-  context "JSON decoding" $ do
-    let servicesInJson =
-          Map.singleton
-            "cleardb"
-            [ CfEnv.Service
-                  { CfEnv.name = "service_name"
-                  , CfEnv.label = "service_label"
-                  , CfEnv.tags = ["tag_a"]
-                  , CfEnv.plan = "service_plan"
-                  , CfEnv.credentials =
-                      Map.fromList
-                        [ ("username", "service_username")
-                        , ("password", "service_password")
-                        ]
-                  }
-              ]
+        let servicesInJson =
+              Map.singleton
+                "cleardb"
+                [ CfEnv.Service
+                      { CfEnv.name = "service_name"
+                      , CfEnv.label = "service_label"
+                      , CfEnv.tags = ["tag_a"]
+                      , CfEnv.plan = "service_plan"
+                      , CfEnv.credentials =
+                          Map.fromList
+                            [ ("username", "service_username")
+                            , ("password", "service_password")
+                            ]
+                      }
+                  ]
 
-    describe "decodeVcapApplication" $ do
-      let vcapAppParser =
-            CfEnv.vcapApplicationParser
-              servicesInJson
-              (CfEnv.EnvVars
-                { EV.home = "/home/userZ"
-                , EV.memoryLimit = "256M"
-                , EV.pwd = "/pwd"
-                , EV.port = 9000
-                , EV.tmpDir = "/tmpdir"
-                , EV.user = "tom"
-                , EV.vcapApplication = vcapApplicationJson
-                , EV.vcapServices = vcapServicesJson
-                })
-
-      it "returns error for bad JSON" $ do
-        let app = CfEnv.decodeVcapApplication vcapAppParser "not-json"
-        app `shouldBe` Left "Error in $: string"
-
-      it "returns Application for valid JSON" $ do
-        let app = CfEnv.decodeVcapApplication vcapAppParser vcapApplicationJson
-        let expected =
-              CfEnv.Application
+        let expected = CfEnv.Application
                 { CfEnv.appId = "abc_application_id"
                 , CfEnv.applicationUris =
                     ["haskell-test.cfapps.io"]
@@ -162,16 +136,8 @@ spec = do
                       , CfEnv.mem = 2048
                       }
                 }
+
         app `shouldBe` Right expected
-
-    describe "vcapServicesDecoder" $ do
-      it "returns error for bad JSON" $ do
-        let services = CfEnv.decodeVcapServices "not-json"
-        services `shouldBe` Left "Error in $: string"
-
-      it "returns the services for good JSON" $ do
-        let services = CfEnv.decodeVcapServices vcapServicesJson
-        services `shouldBe` Right servicesInJson
 
   describe "credentialString" $ do
     let service = CfEnv.Service
@@ -290,22 +256,3 @@ vcapServicesJson =
       }]
     }
   |]
-
-applicationFromJson :: Either String CfEnv.Application
-applicationFromJson = do
-  services <- CfEnv.decodeVcapServices vcapServicesJson
-
-  CfEnv.decodeVcapApplication
-    (CfEnv.vcapApplicationParser
-      services
-      (CfEnv.EnvVars
-        { EV.home = "/home/userZ"
-        , EV.memoryLimit = "256M"
-        , EV.pwd = "/pwd"
-        , EV.port = 9000
-        , EV.tmpDir = "/tmpdir"
-        , EV.user = "tom"
-        , EV.vcapApplication = vcapApplicationJson
-        , EV.vcapServices = vcapServicesJson
-        }))
-    vcapApplicationJson
