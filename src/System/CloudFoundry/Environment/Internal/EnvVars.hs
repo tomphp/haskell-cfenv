@@ -1,4 +1,4 @@
-{-# LANGUAGE LambdaCase, RecordWildCards, ScopedTypeVariables #-}
+{-# LANGUAGE RecordWildCards #-}
 
 module System.CloudFoundry.Environment.Internal.EnvVars
   ( EnvVars(..)

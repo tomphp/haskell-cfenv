@@ -1,5 +1,3 @@
-{-# LANGUAGE LambdaCase #-}
-{-# LANGUAGE ScopedTypeVariables #-}
 module System.Environment.Extended
   ( module System.Environment
   , getEnvDefault

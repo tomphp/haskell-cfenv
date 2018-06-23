@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings, RecordWildCards, ScopedTypeVariables #-}
+{-# LANGUAGE RecordWildCards #-}
 
 module System.CloudFoundry.Environment
   ( Application(..)
@@ -15,21 +15,14 @@ module System.CloudFoundry.Environment
   , withTag
   ) where
 
-import Control.Exception.Safe (Exception, Handler(..), IOException, MonadThrow, catches, throwM)
+import Control.Exception.Safe (Exception, MonadThrow, throwM)
 import Control.Monad ((>=>), join)
 import Data.Char (isSpace)
 import Data.Maybe (fromMaybe, listToMaybe)
-import GHC.Generics
 import qualified Data.Map.Strict as Map
-import System.Environment.Extended (lookupEnv, getEnvDefault)
+import System.Environment.Extended (lookupEnv)
 
-import Control.Error
-import Control.Monad.Except (MonadIO, liftEither, liftIO)
-
-import Data.Aeson (FromJSON, (.:))
-import qualified Data.Aeson as A
-import qualified Data.Aeson.Types as AT
-import qualified Data.ByteString.Lazy.Char8 as BL
+import Control.Monad.Except (MonadIO)
 
 import qualified System.CloudFoundry.Environment.Internal.EnvVars as EV
 import System.CloudFoundry.Environment.Internal.EnvVars (EnvVars(EnvVars))
