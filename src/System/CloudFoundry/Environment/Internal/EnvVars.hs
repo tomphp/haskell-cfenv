@@ -1,4 +1,4 @@
-{-# LANGUAGE LambdaCase, RecordWildCards #-}
+{-# LANGUAGE LambdaCase, RecordWildCards, ScopedTypeVariables #-}
 
 module System.CloudFoundry.Environment.Internal.EnvVars
   ( EnvVars(..)
@@ -6,8 +6,9 @@ module System.CloudFoundry.Environment.Internal.EnvVars
   , getEnvVars
   ) where
 
+import Control.Exception.Safe (IOException, Handler(..), Exception, MonadThrow, throwM, catches)
 import Control.Monad ((>=>))
-import Control.Monad.IO.Class (liftIO)
+import Control.Monad.IO.Class (MonadIO, liftIO)
 import Data.Maybe (fromMaybe)
 import Data.Either (fromRight)
 import System.Environment.Extended (eitherLookupEnv, getEnv, getEnvDefault, lookupEnv)
@@ -18,6 +19,7 @@ import Control.Monad.Except (liftEither)
 import Text.Read (readMaybe)
 
 data EnvVarError = NotSet String | NotInteger String String
+instance Exception EnvVarError
 
 instance Show EnvVarError where
   show (NotSet envName)           = envName ++ " is not set."
@@ -51,10 +53,27 @@ getEnvVars = do
 stringFromEnv :: String -> ExceptT EnvVarError IO String
 stringFromEnv = ExceptT . eitherLookupEnv'
 
+stringToInt :: MonadThrow m => String -> String -> m Int
+stringToInt envName str =
+  case readMaybe str of
+    Just int -> return int
+    Nothing  -> throwM $ NotInteger envName str
+
+numberFromEnv' :: (MonadThrow m, MonadIO m) => String -> m Int
+numberFromEnv' envName =
+    envVarValue envName >>= toInt
+  where
+    envVarValue = liftIO . getEnv
+    toInt       = stringToInt envName
+
 -- TODO: Test me!!!
 numberFromEnv :: String -> ExceptT EnvVarError IO Int
-numberFromEnv envName = ExceptT $ fmap (>>= readEither) $ eitherLookupEnv' envName
+numberFromEnv envName =
+    ExceptT $ numberFromEnv'' envName `catches` [ Handler $ (\(ex :: IOException) -> return $ Left $ NotSet envName)
+                                                , Handler $ (\(ex :: EnvVarError) -> return $ Left ex)
+                                                ]
   where
+    numberFromEnv'' envName = fmap Right $ numberFromEnv' envName
     readEither value = note (errorMessage value) (readMaybe value)
     errorMessage value = NotInteger envName value
 

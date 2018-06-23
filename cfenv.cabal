@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 7f0eedf39d6f19104c54f5e9477db706ac4407a3b4fd126037383bf76cf4d9d2
+-- hash: 29086afc57dca18c998ce4dbd1e16f564bc4b9c31c396ca90ffd85623741fcd1
 
 name:           cfenv
 version:        0.1.0.0
@@ -37,15 +37,16 @@ library
     , errors
     , lens
     , mtl
+    , safe-exceptions
     , text
   exposed-modules:
       System.CloudFoundry.Environment
+      System.Environment.Extended
       System.CloudFoundry.Environment.Internal.EnvVars
   other-modules:
       System.CloudFoundry.Environment.Internal.Types
       System.CloudFoundry.Environment.Internal.VcapApplicationDecoder
       System.CloudFoundry.Environment.Internal.VcapServicesDecoder
-      System.Environment.Extended
       Paths_cfenv
   default-language: Haskell2010
 
