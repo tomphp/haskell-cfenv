@@ -7,15 +7,10 @@ module System.CloudFoundry.Environment.Internal.EnvVars
   ) where
 
 import Control.Exception.Safe (IOException, Handler(..), Exception, MonadThrow, throwM, catches)
-import Control.Monad ((>=>))
 import Control.Monad.IO.Class (MonadIO, liftIO)
-import Data.Maybe (fromMaybe)
-import Data.Either (fromRight)
-import System.Environment.Extended (eitherLookupEnv, getEnv, getEnvDefault, lookupEnv)
+import System.Environment.Extended (getEnv, getEnvDefault)
 
 import Control.Error
-import Control.Error.Util (note)
-import Control.Monad.Except (liftEither)
 import Text.Read (readMaybe)
 
 data EnvVarError = NotSet String | NotInteger String String
@@ -39,19 +34,26 @@ data EnvVars = EnvVars
 -- TODO: Test me!!!
 getEnvVars :: ExceptT EnvVarError IO EnvVars
 getEnvVars = do
-  home <- stringFromEnv "HOME"
-  memoryLimit <- stringFromEnv "MEMORY_LIMIT"
-  pwd <- stringFromEnv "PWD"
-  port <- numberFromEnv "PORT"
-  tmpDir <- stringFromEnv "TMPDIR"
-  user <- stringFromEnv "USER"
-  vcapApplication <- stringFromEnv "VCAP_APPLICATION"
-  vcapServices <- liftIO $ getEnvDefault "{}" "VCAP_SERVICES"
-  return EnvVars{..}
+      ExceptT $ getEnvVars'' `catches` [ Handler $ (\(ex :: IOException) -> return $ Left $ NotSet $ envName $ show ex)
+                                       , Handler $ (\(ex :: EnvVarError) -> return $ Left ex)
+                                       ]
+    where
+      getEnvVars'' = fmap Right $ getEnvVars'
+      envName = takeWhile (/= ':')
 
--- TODO: Test me!!!
-stringFromEnv :: String -> ExceptT EnvVarError IO String
-stringFromEnv = ExceptT . eitherLookupEnv'
+getEnvVars' :: (MonadThrow m, MonadIO m) => m EnvVars
+getEnvVars' = do
+    home <- getEnv' "HOME"
+    memoryLimit <- getEnv' "MEMORY_LIMIT"
+    pwd <- getEnv' "PWD"
+    port <- numberFromEnv' "PORT"
+    tmpDir <- getEnv' "TMPDIR"
+    user <- getEnv' "USER"
+    vcapApplication <- getEnv' "VCAP_APPLICATION"
+    vcapServices <- liftIO $ getEnvDefault "{}" "VCAP_SERVICES"
+    return EnvVars{..}
+  where
+    getEnv' = liftIO . getEnv
 
 stringToInt :: MonadThrow m => String -> String -> m Int
 stringToInt envName str =
@@ -65,19 +67,3 @@ numberFromEnv' envName =
   where
     envVarValue = liftIO . getEnv
     toInt       = stringToInt envName
-
--- TODO: Test me!!!
-numberFromEnv :: String -> ExceptT EnvVarError IO Int
-numberFromEnv envName =
-    ExceptT $ numberFromEnv'' envName `catches` [ Handler $ (\(ex :: IOException) -> return $ Left $ NotSet envName)
-                                                , Handler $ (\(ex :: EnvVarError) -> return $ Left ex)
-                                                ]
-  where
-    numberFromEnv'' envName = fmap Right $ numberFromEnv' envName
-    readEither value = note (errorMessage value) (readMaybe value)
-    errorMessage value = NotInteger envName value
-
-eitherLookupEnv' :: String -> IO (Either EnvVarError String)
-eitherLookupEnv' envName =
-    eitherLookupEnv (NotSet envName) envName
-

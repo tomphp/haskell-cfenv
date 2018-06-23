@@ -18,7 +18,7 @@ import Data.Char (isSpace)
 import Data.Maybe (fromMaybe, listToMaybe)
 import GHC.Generics
 import qualified Data.Map.Strict as Map
-import System.Environment.Extended (eitherLookupEnv, lookupEnv, getEnvDefault)
+import System.Environment.Extended (lookupEnv, getEnvDefault)
 
 import Control.Error
 import Control.Monad.Except (liftEither, liftIO)
