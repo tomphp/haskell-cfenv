@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings, RecordWildCards #-}
+{-# LANGUAGE OverloadedStrings, RecordWildCards, ScopedTypeVariables #-}
 
 module System.CloudFoundry.Environment
   ( Application(..)
@@ -13,6 +13,7 @@ module System.CloudFoundry.Environment
   , withTag
   ) where
 
+import Control.Exception.Safe (Exception, Handler(..), IOException, MonadThrow, catches, throwM)
 import Control.Monad ((>=>), join)
 import Data.Char (isSpace)
 import Data.Maybe (fromMaybe, listToMaybe)
@@ -21,7 +22,7 @@ import qualified Data.Map.Strict as Map
 import System.Environment.Extended (lookupEnv, getEnvDefault)
 
 import Control.Error
-import Control.Monad.Except (liftEither, liftIO)
+import Control.Monad.Except (MonadIO, liftEither, liftIO)
 
 import Data.Aeson (FromJSON, (.:))
 import qualified Data.Aeson as A
@@ -35,6 +36,8 @@ import System.CloudFoundry.Environment.Internal.VcapApplicationDecoder as VcapAp
 import System.CloudFoundry.Environment.Internal.VcapServicesDecoder as VcapServices
 
 data CfEnvError = EnvVarError EV.EnvVarError | DecodeError String String
+
+instance Exception CfEnvError
 
 instance Show CfEnvError where
   show (EnvVarError error)      = show error
@@ -51,6 +54,24 @@ isRunningOnCf =
 -- | Get the current Cloud Foundry environment.
 current :: IO (Either String Application)
 current = runExceptT $ withExceptT show currentT
+
+currentT :: ExceptT CfEnvError IO Application
+currentT = do
+    ExceptT $ current'' `catches` [ Handler $ (\(ex :: IOException) -> return $ Left $ EnvVarError $ EV.NotSet $ envName $ show ex)
+                        , Handler $ (\(ex :: EV.EnvVarError) -> return $ Left $ EnvVarError ex)
+                        , Handler $ (\(ex :: CfEnvError) -> return $ Left ex)
+                        ]
+  where
+    current'' = fmap Right $ current'
+    envName = takeWhile (/= ':')
+
+current' :: (MonadThrow m, MonadIO m) => m Application
+current' = do
+    envVars <- EV.getEnvVars
+    vcapApp <- decodeVcapApplication' (EV.vcapApplication envVars)
+    vcapServices <- decodeVcapServices' (EV.vcapServices envVars)
+
+    return $ mkApplication envVars vcapApp vcapServices
 
 -- | Get a credential string from a service.
 credentialString :: String -> Service -> Maybe String
@@ -73,19 +94,19 @@ withLabel searchLabel = fromMaybe [] . Map.lookup searchLabel
 allServices :: Services -> [Service]
 allServices = join . Map.elems
 
-currentT :: ExceptT CfEnvError IO Application
-currentT = do
-    envVars <- getEnvVars
-    vcapApp <- liftEither $ decodeVcapApplication (EV.vcapApplication envVars)
-    vcapServices <- liftEither $ decodeVcapServices (EV.vcapServices envVars)
+decodeVcapApplication' :: (MonadThrow m, MonadIO m) => String -> m VcapApplication
+decodeVcapApplication' string =
+  case VcapApplication.decode string of
+    Right vcapApplication -> return vcapApplication
+    Left error            -> throwM $ DecodeError "VCAP_APPLICATION" error
 
-    return $ mkApplication envVars vcapApp vcapServices
-  where
-    getEnvVars = withExceptT EnvVarError EV.getEnvVars
-    decodeVcapApplication = mapLeft (DecodeError "VCAP_APPLICATION") . VcapApplication.decode
-    decodeVcapServices = mapLeft (DecodeError "VCAP_SERVICES") . VcapServices.decode
+decodeVcapServices' :: (MonadThrow m, MonadIO m) => String -> m Services
+decodeVcapServices' string =
+  case VcapServices.decode string of
+    Right vcapServices -> return vcapServices
+    Left error         -> throwM $ DecodeError "VCAP_SERVICES" error
 
-mkApplication :: EV.EnvVars -> VcapApplication.VcapApplication -> Services  -> Application
+mkApplication :: EV.EnvVars -> VcapApplication.VcapApplication -> Services -> Application
 mkApplication envVars vcapApp services =
     Application
       { appId = VcapApplication.appId vcapApp
@@ -107,7 +128,3 @@ mkApplication envVars vcapApp services =
       , user = EV.user envVars
       , version = VcapApplication.version vcapApp
       }
-
-mapLeft :: (e -> e1) -> Either e a -> Either e1 a
-mapLeft f (Left error)  = Left $ f error
-mapLeft _ (Right value) = Right value

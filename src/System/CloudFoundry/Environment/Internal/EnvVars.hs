@@ -6,7 +6,7 @@ module System.CloudFoundry.Environment.Internal.EnvVars
   , getEnvVars
   ) where
 
-import Control.Exception.Safe (IOException, Handler(..), Exception, MonadThrow, throwM, catches)
+import Control.Exception.Safe (Exception, MonadThrow, throwM)
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import System.Environment.Extended (getEnv, getEnvDefault)
 
@@ -31,18 +31,8 @@ data EnvVars = EnvVars
   , vcapServices :: String
   }
 
--- TODO: Test me!!!
-getEnvVars :: ExceptT EnvVarError IO EnvVars
+getEnvVars :: (MonadThrow m, MonadIO m) => m EnvVars
 getEnvVars = do
-      ExceptT $ getEnvVars'' `catches` [ Handler $ (\(ex :: IOException) -> return $ Left $ NotSet $ envName $ show ex)
-                                       , Handler $ (\(ex :: EnvVarError) -> return $ Left ex)
-                                       ]
-    where
-      getEnvVars'' = fmap Right $ getEnvVars'
-      envName = takeWhile (/= ':')
-
-getEnvVars' :: (MonadThrow m, MonadIO m) => m EnvVars
-getEnvVars' = do
     home <- getEnv' "HOME"
     memoryLimit <- getEnv' "MEMORY_LIMIT"
     pwd <- getEnv' "PWD"
