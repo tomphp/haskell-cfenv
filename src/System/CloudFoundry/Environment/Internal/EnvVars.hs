@@ -46,7 +46,7 @@ getEnvVars' = do
     home <- getEnv' "HOME"
     memoryLimit <- getEnv' "MEMORY_LIMIT"
     pwd <- getEnv' "PWD"
-    port <- numberFromEnv' "PORT"
+    port <- numberFromEnv "PORT"
     tmpDir <- getEnv' "TMPDIR"
     user <- getEnv' "USER"
     vcapApplication <- getEnv' "VCAP_APPLICATION"
@@ -61,8 +61,8 @@ stringToInt envName str =
     Just int -> return int
     Nothing  -> throwM $ NotInteger envName str
 
-numberFromEnv' :: (MonadThrow m, MonadIO m) => String -> m Int
-numberFromEnv' envName =
+numberFromEnv :: (MonadThrow m, MonadIO m) => String -> m Int
+numberFromEnv envName =
     envVarValue envName >>= toInt
   where
     envVarValue = liftIO . getEnv
