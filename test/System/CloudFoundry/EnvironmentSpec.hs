@@ -2,7 +2,6 @@
 
 module System.CloudFoundry.EnvironmentSpec where
 
-import Data.Either (isRight)
 import qualified Data.Map.Strict as Map
 import System.Environment (setEnv, unsetEnv)
 
@@ -38,58 +37,48 @@ spec = do
     before setEnvVars $ do
       it "returns error if HOME is not set" $ do
         unsetEnv "HOME"
-        app <- CfEnv.current
-        app `shouldBe` Left "HOME is not set."
+        CfEnv.current `shouldThrow` anyIOException
 
       it "returns error if MEMORY_LIMIT is not set" $ do
         unsetEnv "MEMORY_LIMIT"
-        app <- CfEnv.current
-        app `shouldBe` Left "MEMORY_LIMIT is not set."
+        CfEnv.current `shouldThrow` anyIOException
 
       it "returns error if PWD is not set" $ do
         unsetEnv "PWD"
-        app <- CfEnv.current
-        app `shouldBe` Left "PWD is not set."
+        CfEnv.current `shouldThrow` anyIOException
 
       it "returns error if PORT is not set" $ do
         unsetEnv "PORT"
-        app <- CfEnv.current
-        app `shouldBe` Left "PORT is not set."
+        CfEnv.current `shouldThrow` anyIOException
 
       it "returns error if PORT is not valid number" $ do
         setEnv "PORT" "abc"
-        app <- CfEnv.current
-        app `shouldBe` Left "PORT must be an integer, got 'abc'."
+        CfEnv.current `shouldThrow` (== CfEnv.NotInteger "PORT" "abc")
 
       it "returns error if TMPDIR is not set" $ do
         unsetEnv "TMPDIR"
-        app <- CfEnv.current
-        app `shouldBe` Left "TMPDIR is not set."
+        CfEnv.current `shouldThrow` anyIOException
 
       it "returns error if USER is not set" $ do
         unsetEnv "USER"
-        app <- CfEnv.current
-        app `shouldBe` Left "USER is not set."
+        CfEnv.current `shouldThrow` anyIOException
 
       it "returns error if VCAP_APPLICATION is not set" $ do
         unsetEnv "VCAP_APPLICATION"
-        app <- CfEnv.current
-        app `shouldBe` Left "VCAP_APPLICATION is not set."
+        CfEnv.current `shouldThrow` anyIOException
 
       it "returns error if VCAP_APPLICATION bad JSON" $ do
         setEnv "VCAP_APPLICATION" "not-json"
-        app <- CfEnv.current
-        app `shouldBe` Left "VCAP_APPLICATION Error in $: string"
+        CfEnv.current `shouldThrow` (== CfEnv.DecodeError "VCAP_APPLICATION" "Error in $: string")
 
       it "returns Application if VCAP_SERVICES is not set" $ do
         unsetEnv "VCAP_SERVICES"
         app <- CfEnv.current
-        app `shouldSatisfy` isRight
+        app `shouldSatisfy` isApplication
 
       it "returns error if VCAP_SERVICES bad JSON" $ do
         setEnv "VCAP_SERVICES" "not-json"
-        app <- CfEnv.current
-        app `shouldBe` Left "VCAP_SERVICES Error in $: string"
+        CfEnv.current `shouldThrow` (== CfEnv.DecodeError "VCAP_SERVICES" "Error in $: string")
 
       it "returns Application when the environment is correct" $ do
         app <- CfEnv.current
@@ -137,7 +126,7 @@ spec = do
                       }
                 }
 
-        app `shouldBe` Right expected
+        app `shouldBe` expected
 
   describe "credentialString" $ do
     let service = CfEnv.Service
@@ -256,3 +245,6 @@ vcapServicesJson =
       }]
     }
   |]
+
+isApplication :: CfEnv.Application -> Bool
+isApplication _ = True

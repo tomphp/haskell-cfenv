@@ -13,7 +13,7 @@ import System.Environment.Extended (getEnv, getEnvDefault)
 import Control.Error
 import Text.Read (readMaybe)
 
-data EnvVarError = NotSet String | NotInteger String String
+data EnvVarError = NotSet String | NotInteger String String deriving (Eq)
 instance Exception EnvVarError
 
 instance Show EnvVarError where
