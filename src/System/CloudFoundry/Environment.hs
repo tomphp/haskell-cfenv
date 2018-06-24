@@ -3,7 +3,6 @@
 module System.CloudFoundry.Environment
   ( Application(..)
   , CfEnvError(..)
-  , EnvVarError(..)
   , Limits(..)
   , Service(..)
   , current

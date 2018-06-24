@@ -13,7 +13,7 @@ import System.Environment (getEnv, lookupEnv)
 
 import Text.Read (readMaybe)
 
-import System.CloudFoundry.Environment.Internal.Types (EnvVarError(NotInteger))
+import System.CloudFoundry.Environment.Internal.Types (CfEnvError(NotInteger))
 
 data EnvVars = EnvVars
   { home :: String

@@ -49,16 +49,11 @@ instance Aeson.FromJSON Service
 
 type Services = Map String [Service]
 
-data EnvVarError = NotInteger String String deriving (Eq)
-
-instance Exception EnvVarError
-
-instance Show EnvVarError where
-  show (NotInteger envName value) = envName ++ " must be an integer, got '" ++ value ++ "'."
-
-data CfEnvError = DecodeError String String deriving (Eq)
+data CfEnvError = DecodeError String String
+                | NotInteger String String deriving (Eq)
 
 instance Exception CfEnvError
 
 instance Show CfEnvError where
   show (DecodeError name error) = name ++ " " ++ error
+  show (NotInteger envName value) = envName ++ " must be an integer, got '" ++ value ++ "'."
