@@ -52,11 +52,11 @@ current = do
 
 decodeVcapApplication' :: (MonadThrow m, MonadIO m) => String -> m VcapApplication.VcapApplication
 decodeVcapApplication' =
-    eitherToThrow VcapApplication.decode (DecodeError "VCAP_APPLICATION")
+  eitherToThrow VcapApplication.decode (DecodeError "VCAP_APPLICATION")
 
 decodeVcapServices' :: (MonadThrow m, MonadIO m) => String -> m Services
 decodeVcapServices' =
-    eitherToThrow VcapServices.decode (DecodeError "VCAP_SERVICES")
+  eitherToThrow VcapServices.decode (DecodeError "VCAP_SERVICES")
 
 eitherToThrow :: (MonadThrow m, MonadIO m, Exception ex) => (input -> Either error output) -> (error -> ex) -> input -> m output
 eitherToThrow fn exFn input =
