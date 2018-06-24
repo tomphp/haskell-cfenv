@@ -3,22 +3,6 @@
     map to Cloud Foundry environment variable primitives.
 
     This package is a port of https://github.com/cloudfoundry-community/go-cfenv
-
-    Example using @scotty@:
-
-> import Data.String (fromString)
-> import Data.Monoid (mconcat)
->
-> import Web.Scotty
->
-> import qualified System.CloudFoundry.Environment as CfEnv
->
-> main = do
->   app <- CfEnv.current
->
->   scotty (CfEnv.port app) $
->     get "/" $ do
->       html $ mconcat ["<pre>", (fromString (show app)), "</pre>"]
 -}
 
 module System.CloudFoundry.Environment
@@ -45,7 +29,18 @@ import System.CloudFoundry.Environment.Internal.Types
 import qualified System.CloudFoundry.Environment.Internal.VcapApplicationDecoder as VcapApplication
 import qualified System.CloudFoundry.Environment.Internal.VcapServicesDecoder as VcapServices
 
--- |Detect if the application is running as a Cloud Foundry application.
+{- | Detect if the application is running as a Cloud Foundry application.
+
+> import System.CloudFoundry.Environment CfEnv
+>
+> main :: IO ()
+> main = do
+>     isRunningOnCf <- CfEnv.isRunningOnCf
+>
+>     if isRunningOnCf
+>         then putStrLn "Running on Cloud Foundry"
+>         else putStrLn "Not running on Cloud Foundry"
+-}
 isRunningOnCf :: IO Bool
 isRunningOnCf =
     envHasValue "VCAP_APPLICATION"
@@ -56,7 +51,24 @@ isRunningOnCf =
     trimLeft = dropWhile isSpace
     isEmptyString = (==) ""
 
--- |Get the current Cloud Foundry environment.
+{-| Get the current Cloud Foundry environment.
+
+    Example using @scotty@:
+
+> import Data.String (fromString)
+> import Data.Monoid (mconcat)
+>
+> import Web.Scotty
+>
+> import qualified System.CloudFoundry.Environment as CfEnv
+>
+> main = do
+>   app <- CfEnv.current
+>
+>   scotty (CfEnv.port app) $
+>     get "/" $ do
+>       html $ mconcat ["<pre>", (fromString (show app)), "</pre>"]
+-}
 current :: (MonadThrow m, MonadIO m) => m Application
 current = do
     envVars <- EnvVars.getEnvVars

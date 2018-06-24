@@ -8,6 +8,8 @@ import GHC.Generics
 
 import qualified Data.Aeson as Aeson
 
+-- | A representation of the Cloud Foundry environment.
+--   This is returned from 'current'.
 data Application = Application
   { appId           :: String
   , applicationUris :: [String]
@@ -37,6 +39,8 @@ data Limits = Limits
 
 instance Aeson.FromJSON Limits
 
+-- | Description of a bound service. Use `credentialString` to extract the
+--   connection details.
 data Service = Service
   { name  :: String
   , label :: String
@@ -49,11 +53,17 @@ instance Aeson.FromJSON Service
 
 type Services = Map String [Service]
 
-data CfEnvError = DecodeError String String
-                | NotInteger String String deriving (Eq)
+-- | Exceptions which are raised from this package.
+data CfEnvError
+    -- | Thrown when a JSON decode failed for either the VCAP_APPLICATION or
+    --   VCAP_SERIVCES environment variables.
+    = DecodeError String String
+    -- | Thrown when an environment variable which is meant to contain an
+    --   integer contains invalid characters.
+    | NotInteger String String deriving (Eq)
 
 instance Exception CfEnvError
 
 instance Show CfEnvError where
-  show (DecodeError envName errorMsg) = envName ++ " " ++ errorMsg
-  show (NotInteger envName value) = envName ++ " must be an integer, got '" ++ value ++ "'."
+    show (DecodeError envName errorMsg) = envName ++ " " ++ errorMsg
+    show (NotInteger envName value) = envName ++ " must be an integer, got '" ++ value ++ "'."
