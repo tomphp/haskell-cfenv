@@ -24,7 +24,7 @@ import System.CloudFoundry.Environment.Internal.Types
 import qualified System.CloudFoundry.Environment.Internal.VcapApplicationDecoder as VcapApplication
 import qualified System.CloudFoundry.Environment.Internal.VcapServicesDecoder as VcapServices
 
--- | Detect if the application is running as a Cloud Foundry application.
+-- |Detect if the application is running as a Cloud Foundry application.
 isRunningOnCf :: IO Bool
 isRunningOnCf =
     envHasValue "VCAP_APPLICATION"
@@ -35,7 +35,7 @@ isRunningOnCf =
     trimLeft = dropWhile isSpace
     isEmptyString = (==) ""
 
--- | Get the current Cloud Foundry environment.
+-- |Get the current Cloud Foundry environment.
 current :: (MonadThrow m, MonadIO m) => m Application
 current = do
     envVars <- EnvVars.getEnvVars

@@ -10,16 +10,22 @@ import Data.Maybe (fromMaybe, listToMaybe)
 
 import System.CloudFoundry.Environment.Internal.Types
 
--- | Get all services which have the provided tag.
-withTag :: String -> Services -> [Service]
+-- |Get all services which have the provided tag.
+withTag :: String    -- ^ The tag to search for
+        -> Services  -- ^ All services bound to the application
+        -> [Service] -- ^ A list of matching services
 withTag searchTag = filter (elem searchTag . tags) . allServices
 
--- | Get the service by name.
-withName :: String -> Services -> Maybe Service
+-- |Get the service by name.
+withName :: String        -- ^ The name of the service to be found
+         -> Services      -- ^ All services bound to the application
+         -> Maybe Service -- ^ The service if it is found
 withName searchName = listToMaybe . filter ((== searchName) . name) . allServices
 
--- | Get the services by label.
-withLabel :: String -> Services -> [Service]
+-- |Get the services by label.
+withLabel :: String    -- ^ The label to search for
+          -> Services  -- ^ All services bound to the application
+          -> [Service] -- ^ A list of matching services
 withLabel searchLabel = fromMaybe [] . Map.lookup searchLabel
 
 allServices :: Services -> [Service]
