@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 899fcb607e856e62538ec59677b6a88c5457ce0712abf5d7421b5ec12c99dd7f
+-- hash: 4a2f40ed4657bf2a050c55054e8049dd4653b218112d7d87a6b299af0e185990
 
 name:           cfenv
 version:        0.1.0.0
@@ -34,9 +34,6 @@ library
     , base >=4.7 && <5
     , bytestring
     , containers
-    , errors
-    , lens
-    , mtl
     , safe-exceptions
     , text
   exposed-modules:

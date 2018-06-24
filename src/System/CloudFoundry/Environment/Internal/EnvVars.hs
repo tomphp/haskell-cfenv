@@ -12,7 +12,6 @@ import Control.Monad.IO.Class (MonadIO, liftIO)
 import Data.Maybe (fromMaybe)
 import System.Environment (getEnv, lookupEnv)
 
-import Control.Error
 import Text.Read (readMaybe)
 
 data EnvVarError = NotInteger String String deriving (Eq)

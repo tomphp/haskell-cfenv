@@ -16,10 +16,9 @@ module System.CloudFoundry.Environment
 
 import Control.Exception.Safe (Exception, MonadThrow, throwM)
 import Control.Monad ((>=>))
+import Control.Monad.IO.Class (MonadIO)
 import Data.Char (isSpace)
 import System.Environment (lookupEnv)
-
-import Control.Monad.Except (MonadIO)
 
 import qualified System.CloudFoundry.Environment.Internal.EnvVars as EnvVars
 import System.CloudFoundry.Environment.Internal.Service

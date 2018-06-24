@@ -24,10 +24,7 @@ library:
   - System.CloudFoundry.Environment
   dependencies:
   - bytestring
-  - errors
   - safe-exceptions
-  - lens
-  - mtl
   - text
 
 tests:
