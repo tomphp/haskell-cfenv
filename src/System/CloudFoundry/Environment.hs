@@ -1,3 +1,12 @@
+{-| The purpose of this library is to assist you in writing Haskell apps that
+    run on Cloud Foundry. It provides convenience functions and structures that
+    map to Cloud Foundry environment variable primitives.
+
+    This package is a port of https://github.com/cloudfoundry-community/go-cfenv
+
+> import qualified System.CloudFoundry.Environment as CfEnv
+-}
+
 module System.CloudFoundry.Environment
   ( Application(..)
   , CfEnvError(..)
@@ -48,13 +57,20 @@ current = do
     decodeVcapServices =
       eitherToThrow VcapServices.decode (DecodeError "VCAP_SERVICES")
 
-eitherToThrow :: (MonadThrow m, MonadIO m, Exception ex) => (input -> Either error output) -> (error -> ex) -> input -> m output
+eitherToThrow :: (MonadThrow m, MonadIO m, Exception ex)
+              => (input -> Either error output)
+              -> (error -> ex)
+              -> input
+              -> m output
 eitherToThrow fn exFn input =
   case fn input of
     Right output  -> return output
     Left errorMsg -> throwM $ exFn errorMsg
 
-mkApplication :: EnvVars.EnvVars -> VcapApplication.VcapApplication -> Services -> Application
+mkApplication :: EnvVars.EnvVars
+              -> VcapApplication.VcapApplication
+              -> Services
+              -> Application
 mkApplication envVars vcapApp vcapServices =
     Application
       { appId = VcapApplication.appId vcapApp
