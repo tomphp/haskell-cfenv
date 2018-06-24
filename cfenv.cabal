@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 29086afc57dca18c998ce4dbd1e16f564bc4b9c31c396ca90ffd85623741fcd1
+-- hash: 41445936beee8f25dfc4bec3ac4226c330d11621df42c8e83e9ad13ef8bcab52
 
 name:           cfenv
 version:        0.1.0.0
@@ -41,7 +41,6 @@ library
     , text
   exposed-modules:
       System.CloudFoundry.Environment
-      System.Environment.Extended
       System.CloudFoundry.Environment.Internal.EnvVars
   other-modules:
       System.CloudFoundry.Environment.Internal.Types

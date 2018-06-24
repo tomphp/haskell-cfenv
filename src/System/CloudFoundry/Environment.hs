@@ -20,7 +20,7 @@ import Control.Monad ((>=>), join)
 import Data.Char (isSpace)
 import Data.Maybe (fromMaybe, listToMaybe)
 import qualified Data.Map.Strict as Map
-import System.Environment.Extended (lookupEnv)
+import System.Environment (lookupEnv)
 
 import Control.Monad.Except (MonadIO)
 

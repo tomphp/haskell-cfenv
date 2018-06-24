@@ -6,18 +6,19 @@ module System.CloudFoundry.Environment.Internal.EnvVars
   , getEnvVars
   ) where
 
+import Control.Monad ((>=>))
 import Control.Exception.Safe (Exception, MonadThrow, throwM)
 import Control.Monad.IO.Class (MonadIO, liftIO)
-import System.Environment.Extended (getEnv, getEnvDefault)
+import Data.Maybe (fromMaybe)
+import System.Environment (getEnv, lookupEnv)
 
 import Control.Error
 import Text.Read (readMaybe)
 
-data EnvVarError = NotSet String | NotInteger String String deriving (Eq)
+data EnvVarError = NotInteger String String deriving (Eq)
 instance Exception EnvVarError
 
 instance Show EnvVarError where
-  show (NotSet envName)           = envName ++ " is not set."
   show (NotInteger envName value) = envName ++ " must be an integer, got '" ++ value ++ "'."
 
 data EnvVars = EnvVars
@@ -57,3 +58,7 @@ numberFromEnv envName =
   where
     envVarValue = liftIO . getEnv
     toInt       = stringToInt envName
+
+getEnvDefault :: String -> String -> IO String
+getEnvDefault def =
+  lookupEnv >=> return . fromMaybe def
