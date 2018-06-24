@@ -6,7 +6,7 @@ module System.CloudFoundry.Environment.Internal.EnvVars
   ) where
 
 import Control.Monad ((>=>))
-import Control.Exception.Safe (Exception, MonadThrow, throwM)
+import Control.Exception.Safe (MonadThrow, throwM)
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Data.Maybe (fromMaybe)
 import System.Environment (getEnv, lookupEnv)
