@@ -4,7 +4,21 @@
 
     This package is a port of https://github.com/cloudfoundry-community/go-cfenv
 
+    Example using @scotty@:
+
+> import Data.String (fromString)
+> import Data.Monoid (mconcat)
+>
+> import Web.Scotty
+>
 > import qualified System.CloudFoundry.Environment as CfEnv
+>
+> main = do
+>   app <- CfEnv.current
+>
+>   scotty (CfEnv.port app) $
+>     get "/" $ do
+>       html $ mconcat ["<pre>", (fromString (show app)), "</pre>"]
 -}
 
 module System.CloudFoundry.Environment
