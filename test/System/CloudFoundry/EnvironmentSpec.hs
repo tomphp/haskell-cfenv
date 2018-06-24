@@ -15,23 +15,19 @@ spec = do
   describe "isRunningOnCf" $ do
     it "returns true if VCAP_APPLICATION has a value" $ do
       setEnv "VCAP_APPLICATION" "{}"
-      runningOnCf <- CfEnv.isRunningOnCf
-      runningOnCf `shouldBe` True
+      CfEnv.isRunningOnCf `shouldReturn` True
 
     it "returns true if VCAP_APPLICATION is not set" $ do
       unsetEnv "VCAP_APPLICATION"
-      runningOnCf <- CfEnv.isRunningOnCf
-      runningOnCf `shouldBe` False
+      CfEnv.isRunningOnCf `shouldReturn` False
 
     it "returns true if VCAP_APPLICATION is empty" $ do
       setEnv "VCAP_APPLICATION" ""
-      runningOnCf <- CfEnv.isRunningOnCf
-      runningOnCf `shouldBe` False
+      CfEnv.isRunningOnCf `shouldReturn` False
 
     it "returns true if VCAP_APPLICATION is only whitespace" $ do
       setEnv "VCAP_APPLICATION" "    "
-      runningOnCf <- CfEnv.isRunningOnCf
-      runningOnCf `shouldBe` False
+      CfEnv.isRunningOnCf `shouldReturn` False
 
   describe "current" $
     before setEnvVars $ do
@@ -81,8 +77,6 @@ spec = do
         CfEnv.current `shouldThrow` (== CfEnv.DecodeError "VCAP_SERVICES" "Error in $: string")
 
       it "returns Application when the environment is correct" $ do
-        app <- CfEnv.current
-
         let servicesInJson =
               Map.singleton
                 "cleardb"
@@ -126,7 +120,7 @@ spec = do
                       }
                 }
 
-        app `shouldBe` expected
+        CfEnv.current `shouldReturn` expected
 
   describe "credentialString" $ do
     let service = CfEnv.Service
