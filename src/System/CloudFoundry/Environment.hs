@@ -15,15 +15,15 @@ module System.CloudFoundry.Environment
   ) where
 
 import Control.Exception.Safe (Exception, MonadThrow, throwM)
-import Control.Monad ((>=>), join)
-import Data.Char (isSpace)
-import Data.Maybe (fromMaybe, listToMaybe)
 import qualified Data.Map.Strict as Map
+import Control.Monad ((>=>))
+import Data.Char (isSpace)
 import System.Environment (lookupEnv)
 
 import Control.Monad.Except (MonadIO)
 
 import qualified System.CloudFoundry.Environment.Internal.EnvVars as EnvVars
+import System.CloudFoundry.Environment.Internal.Services
 import System.CloudFoundry.Environment.Internal.Types
 import qualified System.CloudFoundry.Environment.Internal.VcapApplicationDecoder as VcapApplication
 import qualified System.CloudFoundry.Environment.Internal.VcapServicesDecoder as VcapServices
@@ -56,23 +56,6 @@ current = do
 -- | Get a credential string from a service.
 credentialString :: String -> Service -> Maybe String
 credentialString key = Map.lookup key . credentials
-
--- Services functions ------------------
-
--- | Get all services which have the provided tag.
-withTag :: String -> Services -> [Service]
-withTag searchTag = filter (elem searchTag . tags) . allServices
-
--- | Get the service by name.
-withName :: String -> Services -> Maybe Service
-withName searchName = listToMaybe . filter ((== searchName) . name) . allServices
-
--- | Get the services by label.
-withLabel :: String -> Services -> [Service]
-withLabel searchLabel = fromMaybe [] . Map.lookup searchLabel
-
-allServices :: Services -> [Service]
-allServices = join . Map.elems
 
 decodeVcapApplication' :: (MonadThrow m, MonadIO m) => String -> m VcapApplication.VcapApplication
 decodeVcapApplication' =
