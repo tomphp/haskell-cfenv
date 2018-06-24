@@ -55,5 +55,5 @@ data CfEnvError = DecodeError String String
 instance Exception CfEnvError
 
 instance Show CfEnvError where
-  show (DecodeError name error) = name ++ " " ++ error
+  show (DecodeError envName errorMsg) = envName ++ " " ++ errorMsg
   show (NotInteger envName value) = envName ++ " must be an integer, got '" ++ value ++ "'."
