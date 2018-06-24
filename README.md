@@ -32,12 +32,11 @@ import Data.Monoid (mconcat)
 import Web.Scotty
 
 import qualified System.CloudFoundry.Environment as CfEnv
-import qualified System.CloudFoundry.Environment.Application as App
 
 main = do
   app <- CfEnv.current
   
-  scotty (App.port app) $
+  scotty (CfEnv.port app) $
     get "/" $ do
       html $ mconcat ["<pre>", (fromString (show app)), "</pre>"] 
 ```
