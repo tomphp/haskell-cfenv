@@ -15,7 +15,6 @@ module System.CloudFoundry.Environment
   ) where
 
 import Control.Exception.Safe (Exception, MonadThrow, throwM)
-import qualified Data.Map.Strict as Map
 import Control.Monad ((>=>))
 import Data.Char (isSpace)
 import System.Environment (lookupEnv)
@@ -23,6 +22,7 @@ import System.Environment (lookupEnv)
 import Control.Monad.Except (MonadIO)
 
 import qualified System.CloudFoundry.Environment.Internal.EnvVars as EnvVars
+import System.CloudFoundry.Environment.Internal.Service
 import System.CloudFoundry.Environment.Internal.Services
 import System.CloudFoundry.Environment.Internal.Types
 import qualified System.CloudFoundry.Environment.Internal.VcapApplicationDecoder as VcapApplication
@@ -52,10 +52,6 @@ current = do
   vcapServices <- decodeVcapServices' (EnvVars.vcapServices envVars)
 
   return $ mkApplication envVars vcapApp vcapServices
-
--- | Get a credential string from a service.
-credentialString :: String -> Service -> Maybe String
-credentialString key = Map.lookup key . credentials
 
 decodeVcapApplication' :: (MonadThrow m, MonadIO m) => String -> m VcapApplication.VcapApplication
 decodeVcapApplication' =
