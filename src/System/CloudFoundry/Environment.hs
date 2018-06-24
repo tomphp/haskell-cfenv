@@ -29,8 +29,11 @@ isRunningOnCf :: IO Bool
 isRunningOnCf =
     envHasValue "VCAP_APPLICATION"
   where
-    envHasValue = lookupEnv >=> return . maybe False isEmpty
-    isEmpty = not . (==) "" . dropWhile isSpace
+    envHasValue = lookupEnv >=> return . maybeHasValue
+    maybeHasValue = maybe False hasValue
+    hasValue = not . isEmptyString . trimLeft
+    trimLeft = dropWhile isSpace
+    isEmptyString = (==) ""
 
 -- | Get the current Cloud Foundry environment.
 current :: (MonadThrow m, MonadIO m) => m Application
