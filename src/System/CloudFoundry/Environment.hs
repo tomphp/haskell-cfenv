@@ -3,8 +3,7 @@
 module System.CloudFoundry.Environment
   ( Application(..)
   , CfEnvError(..)
-  , EnvVars(EnvVars)
-  , EV.EnvVarError(..)
+  , EnvVars.EnvVarError(..)
   , Limits(..)
   , Service(..)
   , credentialString
@@ -24,13 +23,12 @@ import System.Environment (lookupEnv)
 
 import Control.Monad.Except (MonadIO)
 
-import qualified System.CloudFoundry.Environment.Internal.EnvVars as EV
-import System.CloudFoundry.Environment.Internal.EnvVars (EnvVars(EnvVars))
+import qualified System.CloudFoundry.Environment.Internal.EnvVars as EnvVars
 import System.CloudFoundry.Environment.Internal.Types
-import System.CloudFoundry.Environment.Internal.VcapApplicationDecoder as VcapApplication
-import System.CloudFoundry.Environment.Internal.VcapServicesDecoder as VcapServices
+import qualified System.CloudFoundry.Environment.Internal.VcapApplicationDecoder as VcapApplication
+import qualified System.CloudFoundry.Environment.Internal.VcapServicesDecoder as VcapServices
 
-data CfEnvError = EnvVarError EV.EnvVarError | DecodeError String String deriving (Eq)
+data CfEnvError = EnvVarError EnvVars.EnvVarError | DecodeError String String deriving (Eq)
 
 instance Exception CfEnvError
 
@@ -49,9 +47,9 @@ isRunningOnCf =
 -- | Get the current Cloud Foundry environment.
 current :: (MonadThrow m, MonadIO m) => m Application
 current = do
-  envVars <- EV.getEnvVars
-  vcapApp <- decodeVcapApplication' (EV.vcapApplication envVars)
-  vcapServices <- decodeVcapServices' (EV.vcapServices envVars)
+  envVars <- EnvVars.getEnvVars
+  vcapApp <- decodeVcapApplication' (EnvVars.vcapApplication envVars)
+  vcapServices <- decodeVcapServices' (EnvVars.vcapServices envVars)
 
   return $ mkApplication envVars vcapApp vcapServices
 
@@ -76,7 +74,7 @@ withLabel searchLabel = fromMaybe [] . Map.lookup searchLabel
 allServices :: Services -> [Service]
 allServices = join . Map.elems
 
-decodeVcapApplication' :: (MonadThrow m, MonadIO m) => String -> m VcapApplication
+decodeVcapApplication' :: (MonadThrow m, MonadIO m) => String -> m VcapApplication.VcapApplication
 decodeVcapApplication' =
     eitherToThrow VcapApplication.decode (DecodeError "VCAP_APPLICATION")
 
@@ -90,25 +88,25 @@ eitherToThrow fn exFn input =
     Right output -> return output
     Left error   -> throwM $ exFn error
 
-mkApplication :: EV.EnvVars -> VcapApplication.VcapApplication -> Services -> Application
+mkApplication :: EnvVars.EnvVars -> VcapApplication.VcapApplication -> Services -> Application
 mkApplication envVars vcapApp services =
     Application
       { appId = VcapApplication.appId vcapApp
       , appName = VcapApplication.appName vcapApp
       , applicationUris = VcapApplication.applicationUris vcapApp
       , cfApi = VcapApplication.cfApi vcapApp
-      , home = EV.home envVars
+      , home = EnvVars.home envVars
       , host = VcapApplication.host vcapApp
       , index = VcapApplication.index vcapApp
       , instanceId = VcapApplication.instanceId vcapApp
       , limits = VcapApplication.limits vcapApp
-      , memoryLimit = EV.memoryLimit envVars
-      , port = EV.port envVars
-      , pwd = EV.pwd envVars
+      , memoryLimit = EnvVars.memoryLimit envVars
+      , port = EnvVars.port envVars
+      , pwd = EnvVars.pwd envVars
       , services = services
       , spaceId = VcapApplication.spaceId vcapApp
       , spaceName = VcapApplication.spaceName vcapApp
-      , tmpDir = EV.tmpDir envVars
-      , user = EV.user envVars
+      , tmpDir = EnvVars.tmpDir envVars
+      , user = EnvVars.user envVars
       , version = VcapApplication.version vcapApp
       }
