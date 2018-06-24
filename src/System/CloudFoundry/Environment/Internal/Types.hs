@@ -2,6 +2,7 @@
 
 module System.CloudFoundry.Environment.Internal.Types where
 
+import Control.Exception.Safe (Exception)
 import Data.Map.Strict (Map)
 import GHC.Generics
 
@@ -47,3 +48,17 @@ data Service = Service
 instance Aeson.FromJSON Service
 
 type Services = Map String [Service]
+
+data EnvVarError = NotInteger String String deriving (Eq)
+
+instance Exception EnvVarError
+
+instance Show EnvVarError where
+  show (NotInteger envName value) = envName ++ " must be an integer, got '" ++ value ++ "'."
+
+data CfEnvError = DecodeError String String deriving (Eq)
+
+instance Exception CfEnvError
+
+instance Show CfEnvError where
+  show (DecodeError name error) = name ++ " " ++ error

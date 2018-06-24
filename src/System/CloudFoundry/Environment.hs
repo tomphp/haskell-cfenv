@@ -3,7 +3,7 @@
 module System.CloudFoundry.Environment
   ( Application(..)
   , CfEnvError(..)
-  , EnvVars.EnvVarError(..)
+  , EnvVarError(..)
   , Limits(..)
   , Service(..)
   , current
@@ -24,14 +24,6 @@ import System.CloudFoundry.Environment.Internal.Services
 import System.CloudFoundry.Environment.Internal.Types
 import qualified System.CloudFoundry.Environment.Internal.VcapApplicationDecoder as VcapApplication
 import qualified System.CloudFoundry.Environment.Internal.VcapServicesDecoder as VcapServices
-
-data CfEnvError = EnvVarError EnvVars.EnvVarError | DecodeError String String deriving (Eq)
-
-instance Exception CfEnvError
-
-instance Show CfEnvError where
-  show (EnvVarError error)      = show error
-  show (DecodeError name error) = name ++ " " ++ error
 
 -- | Detect if the application is running as a Cloud Foundry application.
 isRunningOnCf :: IO Bool

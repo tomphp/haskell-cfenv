@@ -2,7 +2,6 @@
 
 module System.CloudFoundry.Environment.Internal.EnvVars
   ( EnvVars(..)
-  , EnvVarError(..)
   , getEnvVars
   ) where
 
@@ -14,11 +13,7 @@ import System.Environment (getEnv, lookupEnv)
 
 import Text.Read (readMaybe)
 
-data EnvVarError = NotInteger String String deriving (Eq)
-instance Exception EnvVarError
-
-instance Show EnvVarError where
-  show (NotInteger envName value) = envName ++ " must be an integer, got '" ++ value ++ "'."
+import System.CloudFoundry.Environment.Internal.Types (EnvVarError(NotInteger))
 
 data EnvVars = EnvVars
   { home :: String
