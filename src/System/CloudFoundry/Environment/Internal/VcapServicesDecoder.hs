@@ -8,4 +8,4 @@ import qualified Data.ByteString.Lazy.Char8 as LazyByteString
 import System.CloudFoundry.Environment.Internal.Types
 
 decode :: String -> Either String Services
-decode = Aeson.eitherDecode . LazyByteString.pack
+decode = fmap Services . Aeson.eitherDecode . LazyByteString.pack

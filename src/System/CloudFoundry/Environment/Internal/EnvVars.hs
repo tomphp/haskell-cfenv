@@ -6,8 +6,7 @@ module System.CloudFoundry.Environment.Internal.EnvVars
   ) where
 
 import Control.Monad ((>=>))
-import Control.Exception.Safe (MonadThrow, throwM)
-import Control.Monad.IO.Class (MonadIO, liftIO)
+import Control.Exception (throw)
 import Data.Maybe (fromMaybe)
 import System.Environment (getEnv, lookupEnv)
 
@@ -26,7 +25,7 @@ data EnvVars = EnvVars
   , vcapServices :: String
   }
 
-getEnvVars :: (MonadThrow m, MonadIO m) => m EnvVars
+getEnvVars :: IO EnvVars
 getEnvVars = do
     home <- getEnvIO "HOME"
     memoryLimit <- getEnvIO "MEMORY_LIMIT"
@@ -35,22 +34,22 @@ getEnvVars = do
     tmpDir <- getEnvIO "TMPDIR"
     user <- getEnvIO "USER"
     vcapApplication <- getEnvIO "VCAP_APPLICATION"
-    vcapServices <- liftIO $ getEnvDefault "{}" "VCAP_SERVICES"
+    vcapServices <- getEnvDefault "{}" "VCAP_SERVICES"
     return EnvVars{..}
   where
-    getEnvIO = liftIO . getEnv
+    getEnvIO = getEnv
 
-stringToInt :: MonadThrow m => String -> String -> m Int
+stringToInt :: String -> String -> IO Int
 stringToInt envName str =
   case readMaybe str of
     Just int -> return int
-    Nothing  -> throwM $ NotInteger envName str
+    Nothing  -> throw $ NotInteger envName str
 
-numberFromEnv :: (MonadThrow m, MonadIO m) => String -> m Int
+numberFromEnv :: String -> IO Int
 numberFromEnv envName =
     envVarValue envName >>= toInt
   where
-    envVarValue = liftIO . getEnv
+    envVarValue = getEnv
     toInt       = stringToInt envName
 
 getEnvDefault :: String -> String -> IO String

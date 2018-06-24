@@ -26,7 +26,8 @@ withName searchName = listToMaybe . filter ((== searchName) . name) . allService
 withLabel :: String    -- ^ The label to search for
           -> Services  -- ^ All services bound to the application
           -> [Service] -- ^ A list of matching services
-withLabel searchLabel = fromMaybe [] . Map.lookup searchLabel
+withLabel searchLabel (Services svcs) =
+    fromMaybe [] $ Map.lookup searchLabel svcs
 
 allServices :: Services -> [Service]
-allServices = join . Map.elems
+allServices (Services svcs) = join $ Map.elems svcs

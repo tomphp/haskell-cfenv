@@ -6,19 +6,15 @@
 -}
 
 module System.CloudFoundry.Environment
-  ( Application(..)
-  , CfEnvError(..)
-  , Limits(..)
-  , Service(..)
-  , current
+  ( current
   , isRunningOnCf
   , module System.CloudFoundry.Environment.Internal.Service
   , module System.CloudFoundry.Environment.Internal.Services
+  , module System.CloudFoundry.Environment.Internal.Types
   ) where
 
-import Control.Exception.Safe (Exception, MonadThrow, throwM)
+import Control.Exception (Exception, throw)
 import Control.Monad ((>=>))
-import Control.Monad.IO.Class (MonadIO)
 import Data.Char (isSpace)
 import System.Environment (lookupEnv)
 
@@ -69,7 +65,7 @@ isRunningOnCf =
 >     get "/" $ do
 >       html $ mconcat ["<pre>", (fromString (show app)), "</pre>"]
 -}
-current :: (MonadThrow m, MonadIO m) => m Application
+current :: IO Application
 current = do
     envVars <- EnvVars.getEnvVars
     vcapApp <- decodeVcapApplication (EnvVars.vcapApplication envVars)
@@ -83,15 +79,15 @@ current = do
     decodeVcapServices =
       eitherToThrow VcapServices.decode (DecodeError "VCAP_SERVICES")
 
-eitherToThrow :: (MonadThrow m, MonadIO m, Exception ex)
+eitherToThrow :: (Exception ex)
               => (input -> Either error output)
               -> (error -> ex)
               -> input
-              -> m output
+              -> IO output
 eitherToThrow fn exFn input =
   case fn input of
     Right output  -> return output
-    Left errorMsg -> throwM $ exFn errorMsg
+    Left errorMsg -> throw $ exFn errorMsg
 
 mkApplication :: EnvVars.EnvVars
               -> VcapApplication.VcapApplication

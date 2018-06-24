@@ -2,7 +2,7 @@
 
 module System.CloudFoundry.Environment.Internal.Types where
 
-import Control.Exception.Safe (Exception)
+import Control.Exception (Exception)
 import Data.Map.Strict (Map)
 import GHC.Generics
 
@@ -51,7 +51,9 @@ data Service = Service
 
 instance Aeson.FromJSON Service
 
-type Services = Map String [Service]
+-- | A collection of 'Service' instances. 'withTag', 'withName' and 'withLabel' can be
+--   used to find the specific services that you want.
+newtype Services = Services (Map String [Service]) deriving (Eq, Show)
 
 -- | Exceptions which are raised from this package.
 data CfEnvError

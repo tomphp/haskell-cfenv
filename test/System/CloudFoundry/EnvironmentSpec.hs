@@ -78,20 +78,21 @@ spec = do
 
       it "returns Application when the environment is correct" $ do
         let servicesInJson =
-              Map.singleton
-                "cleardb"
-                [ CfEnv.Service
-                      { CfEnv.name = "service_name"
-                      , CfEnv.label = "service_label"
-                      , CfEnv.tags = ["tag_a"]
-                      , CfEnv.plan = "service_plan"
-                      , CfEnv.credentials =
-                          Map.fromList
-                            [ ("username", "service_username")
-                            , ("password", "service_password")
-                            ]
-                      }
-                  ]
+              CfEnv.Services $
+                  Map.singleton
+                    "cleardb"
+                    [ CfEnv.Service
+                          { CfEnv.name = "service_name"
+                          , CfEnv.label = "service_label"
+                          , CfEnv.tags = ["tag_a"]
+                          , CfEnv.plan = "service_plan"
+                          , CfEnv.credentials =
+                              Map.fromList
+                                [ ("username", "service_username")
+                                , ("password", "service_password")
+                                ]
+                          }
+                      ]
 
         let expected = CfEnv.Application
                 { CfEnv.appId = "abc_application_id"
@@ -162,10 +163,10 @@ spec = do
             , CfEnv.plan = "plan-c"
             , CfEnv.credentials = Map.empty
             }
-    let services = Map.fromList
-                    [ ("relational-db", [serviceA, serviceB])
-                    , ("message-queue" , [serviceC])
-                    ]
+    let services = CfEnv.Services $ Map.fromList
+                                      [ ("relational-db", [serviceA, serviceB])
+                                      , ("message-queue" , [serviceC])
+                                      ]
 
     describe "withTag" $ do
       it "returns an empty list if no matching services are found" $ do
