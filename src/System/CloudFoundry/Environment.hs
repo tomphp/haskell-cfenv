@@ -6,12 +6,10 @@ module System.CloudFoundry.Environment
   , EnvVars.EnvVarError(..)
   , Limits(..)
   , Service(..)
-  , credentialString
   , current
   , isRunningOnCf
-  , withLabel
-  , withName
-  , withTag
+  , module System.CloudFoundry.Environment.Internal.Service
+  , module System.CloudFoundry.Environment.Internal.Services
   ) where
 
 import Control.Exception.Safe (Exception, MonadThrow, throwM)
