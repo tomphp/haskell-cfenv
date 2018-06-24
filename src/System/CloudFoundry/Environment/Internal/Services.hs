@@ -4,7 +4,7 @@ module System.CloudFoundry.Environment.Internal.Services
   , withTag
   ) where
 
-import Control.Monad ((>=>), join)
+import Control.Monad (join)
 import qualified Data.Map.Strict as Map
 import Data.Maybe (fromMaybe, listToMaybe)
 

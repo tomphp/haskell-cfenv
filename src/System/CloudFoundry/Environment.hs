@@ -1,5 +1,3 @@
-{-# LANGUAGE RecordWildCards #-}
-
 module System.CloudFoundry.Environment
   ( Application(..)
   , CfEnvError(..)
@@ -53,11 +51,11 @@ current = do
 eitherToThrow :: (MonadThrow m, MonadIO m, Exception ex) => (input -> Either error output) -> (error -> ex) -> input -> m output
 eitherToThrow fn exFn input =
   case fn input of
-    Right output -> return output
-    Left error   -> throwM $ exFn error
+    Right output  -> return output
+    Left errorMsg -> throwM $ exFn errorMsg
 
 mkApplication :: EnvVars.EnvVars -> VcapApplication.VcapApplication -> Services -> Application
-mkApplication envVars vcapApp services =
+mkApplication envVars vcapApp vcapServices =
     Application
       { appId = VcapApplication.appId vcapApp
       , appName = VcapApplication.appName vcapApp
@@ -71,7 +69,7 @@ mkApplication envVars vcapApp services =
       , memoryLimit = EnvVars.memoryLimit envVars
       , port = EnvVars.port envVars
       , pwd = EnvVars.pwd envVars
-      , services = services
+      , services = vcapServices
       , spaceId = VcapApplication.spaceId vcapApp
       , spaceName = VcapApplication.spaceName vcapApp
       , tmpDir = EnvVars.tmpDir envVars
