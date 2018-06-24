@@ -33,17 +33,17 @@ data EnvVars = EnvVars
 
 getEnvVars :: (MonadThrow m, MonadIO m) => m EnvVars
 getEnvVars = do
-    home <- getEnv' "HOME"
-    memoryLimit <- getEnv' "MEMORY_LIMIT"
-    pwd <- getEnv' "PWD"
+    home <- getEnvIO "HOME"
+    memoryLimit <- getEnvIO "MEMORY_LIMIT"
+    pwd <- getEnvIO "PWD"
     port <- numberFromEnv "PORT"
-    tmpDir <- getEnv' "TMPDIR"
-    user <- getEnv' "USER"
-    vcapApplication <- getEnv' "VCAP_APPLICATION"
+    tmpDir <- getEnvIO "TMPDIR"
+    user <- getEnvIO "USER"
+    vcapApplication <- getEnvIO "VCAP_APPLICATION"
     vcapServices <- liftIO $ getEnvDefault "{}" "VCAP_SERVICES"
     return EnvVars{..}
   where
-    getEnv' = liftIO . getEnv
+    getEnvIO = liftIO . getEnv
 
 stringToInt :: MonadThrow m => String -> String -> m Int
 stringToInt envName str =
