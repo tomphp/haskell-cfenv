@@ -35,16 +35,9 @@ import qualified System.CloudFoundry.Environment as CfEnv
 import qualified System.CloudFoundry.Environment.Application as App
 
 main = do
-  cfenv <- CfEnv.current
+  app <- CfEnv.current
   
-  case cfenv of
-    Right app ->
-      scotty (App.port app) $
-        get "/" $ do
-          html $ mconcat ["<pre>", (fromString (show app)), "</pre>"]
-          
-    Left error ->
-      putStrLn "Can't get the Cloud Foundry environment."
-      
-  
+  scotty (App.port app) $
+    get "/" $ do
+      html $ mconcat ["<pre>", (fromString (show app)), "</pre>"] 
 ```
