@@ -123,6 +123,15 @@ spec = do
 
         CfEnv.current `shouldReturn` expected
 
+  describe "lookupCurrent" $ do
+    it "returns Just Application if running on Cloud Foundry" $ do
+      expected <- CfEnv.current
+      CfEnv.lookupCurrent `shouldReturn` Just expected
+
+    it "returns Nothing if not running on Cloud Foundry" $ do
+      unsetEnv "VCAP_APPLICATION"
+      CfEnv.lookupCurrent `shouldReturn` Nothing
+
   describe "credentialString" $ do
     let service = CfEnv.Service
           { CfEnv.name = "service_name"

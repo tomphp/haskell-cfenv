@@ -8,6 +8,7 @@
 module System.CloudFoundry.Environment
   ( current
   , isRunningOnCf
+  , lookupCurrent
   , module System.CloudFoundry.Environment.Internal.Service
   , module System.CloudFoundry.Environment.Internal.Services
   , module System.CloudFoundry.Environment.Internal.Types
@@ -78,6 +79,16 @@ current = do
 
     decodeVcapServices =
       eitherToThrow VcapServices.decode (DecodeError "VCAP_SERVICES")
+
+-- | Get the current Cloud Foundry environment and return the result in a Maybe.
+--   See `current`.
+lookupCurrent :: IO (Maybe Application)
+lookupCurrent = do
+  isOnCf <- isRunningOnCf
+
+  if isOnCf
+    then fmap Just current
+    else return Nothing
 
 eitherToThrow :: (Exception ex)
               => (input -> Either error output)
