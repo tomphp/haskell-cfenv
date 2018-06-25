@@ -29,7 +29,7 @@ main = do
       html $ mconcat ["<pre>", (fromString (show app)), "</pre>"] 
 ```
 
-## Documenatation
+## Documentation
 
 For me information see [cfenv](http://hackage.haskell.org/package/cfenv) on
 Hackage.
