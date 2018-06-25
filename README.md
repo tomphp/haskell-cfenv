@@ -9,18 +9,6 @@ The purpose of this library is to assist you in writing Haskell apps that run
 on Cloud Foundry. It provides convenience functions and structures that map to
 Cloud Foundry environment variable primitives.
 
-## Progress
-
-**Current State: Early WIP**
-
-- [x] Read environment variables into `Application`
-- [x] Read basic values from `VCAP_APPLICATION` into `Application`
-- [x] Read application URIs into `Application`
-- [x] Read limits into `Application`
-- [x] Read `VCAP_SERVICES`
-- [ ] Find services by pattern matching
-- [ ] Cases from go-cfenv around handling missing data
-
 ## Usage
 
 ```haskell
@@ -40,3 +28,10 @@ main = do
     get "/" $ do
       html $ mconcat ["<pre>", (fromString (show app)), "</pre>"] 
 ```
+
+## Missing Functionality
+
+- Find services by pattern matching
+- Some cases from [go-cfenv](https://github.com/cloudfoundry-community/go-cfenv)
+  around handling missing data
+
