@@ -27,17 +27,15 @@ data EnvVars = EnvVars
 
 getEnvVars :: IO EnvVars
 getEnvVars = do
-    home <- getEnvIO "HOME"
-    memoryLimit <- getEnvIO "MEMORY_LIMIT"
-    pwd <- getEnvIO "PWD"
+    home <- getEnv "HOME"
+    memoryLimit <- getEnv "MEMORY_LIMIT"
+    pwd <- getEnv "PWD"
     port <- numberFromEnv "PORT"
-    tmpDir <- getEnvIO "TMPDIR"
-    user <- getEnvIO "USER"
-    vcapApplication <- getEnvIO "VCAP_APPLICATION"
+    tmpDir <- getEnv "TMPDIR"
+    user <- getEnv "USER"
+    vcapApplication <- getEnv "VCAP_APPLICATION"
     vcapServices <- getEnvDefault "{}" "VCAP_SERVICES"
     return EnvVars{..}
-  where
-    getEnvIO = getEnv
 
 stringToInt :: String -> String -> IO Int
 stringToInt envName str =
