@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: d911cacaffef6e8d2a033c2da3c2dd1c74c5ecd5d01ba2eb3b9dc70792025fb8
+-- hash: 7ab1edca468ef31223e70ac4a2b1828d9e3c8faf5cbbbd3c8671c423b82dfe94
 
 name:           cfenv
 version:        0.1.0.0
@@ -12,7 +12,7 @@ category:       Library
 homepage:       https://github.com/tomphp/haskell-cfenv#readme
 bug-reports:    https://github.com/tomphp/haskell-cfenv/issues
 author:         Tom Oram
-maintainer:     tom@codept.com
+maintainer:     tom@x2k.com
 copyright:      2018, Tom Oram
 license:        BSD3
 license-file:   LICENSE
