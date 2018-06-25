@@ -29,6 +29,11 @@ main = do
       html $ mconcat ["<pre>", (fromString (show app)), "</pre>"] 
 ```
 
+## Documenatation
+
+For me information see [cfenv](http://hackage.haskell.org/package/cfenv) on
+Hackage.
+
 ## Missing Functionality
 
 - Find services by pattern matching
