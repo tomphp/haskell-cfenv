@@ -8,33 +8,33 @@ import GHC.Generics
 
 import qualified Data.Aeson as Aeson
 
--- | A representation of the Cloud Foundry environment.
+-- | Holds information about the current app running on Cloud Foundry.
 --   This is returned from 'current'.
 data Application = Application
-  { appId           :: String
-  , applicationUris :: [String]
-  , cfApi           :: String
-  , home            :: String
-  , host            :: String
-  , instanceId      :: String
-  , index           :: Int
-  , limits          :: Limits
-  , memoryLimit     :: String
-  , appName         :: String
-  , pwd             :: String
-  , port            :: Int
-  , services        :: Services
-  , spaceId         :: String
-  , spaceName       :: String
-  , tmpDir          :: String
-  , user            :: String
-  , version         :: String
+  { appId           :: String   -- ^ ID of the application
+  , applicationUris :: [String] -- ^ Application URI of the app
+  , cfApi           :: String   -- ^ URL for the Cloud Foundry API endpoint
+  , home            :: String   -- ^ Root folder for the deployed app
+  , host            :: String   -- ^ Host of the app
+  , instanceId      :: String   -- ^ ID of the instance
+  , index           :: Int      -- ^ Index of the app
+  , limits          :: Limits   -- ^ Limits imposed on this process
+  , memoryLimit     :: String   -- ^ Maximum amount of memory that each instance of the application can consume
+  , appName         :: String   -- ^ Name of the app
+  , pwd             :: String   -- ^ Present working directory, where the buildpack that processed the application ran
+  , port            :: Int      -- ^ Port which the app must listen on to receive traffic
+  , services        :: Services -- ^ Services bound to the app
+  , spaceId         :: String   -- ^ ID of the space
+  , spaceName       :: String   -- ^ Name of the space
+  , tmpDir          :: String   -- ^ Directory location where temporary and staging files are stored
+  , user            :: String   -- ^ User account under which the app instance runs
+  , version         :: String   -- ^ Version of the app
   } deriving (Eq, Show)
 
 data Limits = Limits
-  { disk :: Int
-  , fds  :: Int
-  , mem  :: Int
+  { disk :: Int -- ^ Disk limit
+  , fds  :: Int -- ^ File descriptors limit
+  , mem  :: Int -- ^ Memory limit
   } deriving (Eq, Show, Generic)
 
 instance Aeson.FromJSON Limits
